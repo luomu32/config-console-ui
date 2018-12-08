@@ -16,7 +16,14 @@
                     <ButtonGroup>
                         <Button icon="md-add" @click="showModal(false)">创建配置</Button>
                         <Button icon="md-arrow-up" @click="showImportModal()">导入配置</Button>
-                        <Button icon="md-download" @click="showModal(false)">导出配置</Button>
+                        <Dropdown style="text-align:left" @on-click="exportConfig">
+                            <Button icon="md-download" >导出配置</Button>
+                            <DropdownMenu slot="list">
+                              <DropdownItem name="properties">Property格式</DropdownItem>
+                              <DropdownItem name="yml">YAML格式</DropdownItem>
+                          </DropdownMenu>
+                        </Dropdown>
+                        
                     </ButtonGroup>
                 </Col>
         </Row>
@@ -81,9 +88,6 @@
                 </FormItem>
             </Col>
           </Row>
-              <!-- <FormItem label="配置项名称" prop="name"> -->
-                <!-- <Input v-model="config.name" :clearable="!editMode" :disabled="editMode" /> -->
-              <!-- </FormItem> -->
           <Upload multiple type="drag" action="//jsonplaceholder.typicode.com/posts/" disabled>
             <div style="padding: 20px 0">
             <Icon type="ios-cloud-upload" size="52" style="color: #3399ff"></Icon>
@@ -96,6 +100,8 @@
             <Button type="success" style="width:200px" ghost @click="importSubmit" :loading="submitLoading">提交</Button>
           </div>
         </Modal>
+
+      
     </div>
 </template>
 <script>
@@ -128,6 +134,7 @@ export default {
         value: [{ required: true, message: "值不能为空", trigger: "blur" }]
       },
       importModalDisplayFlag: false,
+
       col: [
         { type: "selection", width: 60, align: "center" },
         { title: "配置项名称", key: "key" },
@@ -326,6 +333,18 @@ export default {
           this.importCancel();
         }
       });
+    },
+    exportConfig(name) {
+      if (!this.application || (this.profiles.length != 0 && !this.profile)) {
+        this.$Message.error("请先指定一个应用及Profile");
+        return;
+      }
+      this.$http
+        .post(`/config/${this.application}/export.${name}`, {
+          profile: this.profile
+        })
+        .then(() => {});
+      console.log(name);
     }
   }
 };
