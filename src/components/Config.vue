@@ -1,111 +1,136 @@
 <template>
-    <div>
-      <div class="query-bar">
-        <Row>
-                <Col span="12">
-                    <label>应用：</label>
-                    <Select v-model="application" style="width:160px">
-                      <Option v-for="item in applications" :value="item" :key="item">{{ item }}</Option>
-                    </Select>
-                    <Select v-model="profile" style="width:160px">
-                      <Option v-for="item in profiles" :value="item" :key="item">{{ item }}</Option>
-                    </Select>
-                    <Button @click="loadConfigs()" icon="md-search">查询</Button>
-                </Col>
-                <Col span="12" style="text-align:right">
-                    <ButtonGroup>
-                        <Button icon="md-add" @click="showModal(false)">创建配置</Button>
-                        <Button icon="md-arrow-up" @click="showImportModal()">导入配置</Button>
-                        <Dropdown style="text-align:left" @on-click="exportConfig">
-                            <Button icon="md-download" >导出配置</Button>
-                            <DropdownMenu slot="list">
-                              <DropdownItem name="properties">Property格式</DropdownItem>
-                              <DropdownItem name="yml">YAML格式</DropdownItem>
-                          </DropdownMenu>
-                        </Dropdown>
-                        
-                    </ButtonGroup>
-                </Col>
+  <div>
+    <div class="query-bar">
+      <Row>
+        <Col span="12">
+          <label>应用：</label>
+          <Select v-model="application" style="width:160px">
+            <Option v-for="item in applications" :value="item" :key="item">{{ item }}</Option>
+          </Select>
+          <Select v-model="profile" style="width:160px">
+            <Option v-for="item in profiles" :value="item" :key="item">{{ item }}</Option>
+          </Select>
+          <Button @click="loadConfigs()" icon="md-search">查询</Button>
+        </Col>
+        <Col span="12" style="text-align:right">
+          <ButtonGroup>
+            <Button icon="md-add" @click="showModal(false)">创建配置</Button>
+            <Button icon="md-arrow-up" @click="showImportModal()">导入配置</Button>
+            <Dropdown style="text-align:left" @on-click="exportConfig">
+              <Button icon="md-download">导出配置</Button>
+              <DropdownMenu slot="list">
+                <DropdownItem name="properties">Property格式</DropdownItem>
+                <DropdownItem name="yml">YAML格式</DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </ButtonGroup>
+        </Col>
+      </Row>
+    </div>
+
+    <Table border :data="configs" :columns="col" :loading="configsLoading"></Table>
+
+    <Modal v-model="modalDisplayFlag" :title="modalTitle" @on-cancel="cancel">
+      <Form :model="config" label-position="top" :rules="configRules" ref="config">
+        <Row :gutter="16">
+          <Col span="12">
+            <FormItem label="所属的应用" prop="application">
+              <Select v-model="config.application" :disabled="editMode">
+                <Option v-for="item in configApplications" :value="item" :key="item">{{ item }}</Option>
+              </Select>
+            </FormItem>
+          </Col>
+          <Col span="12">
+            <FormItem label="所属的Profile" prop="profile" v-show="noProfile">
+              <Select v-model="config.profile" :disabled="editMode">
+                <Option v-for="item in configProfiles" :value="item" :key="item">{{ item }}</Option>
+                <!-- <Option v-else value="无" >无</Option> -->
+              </Select>
+            </FormItem>
+          </Col>
         </Row>
+        <Row :gutter="16">
+          <Col span="12">
+            <FormItem label="配置项名称" prop="name">
+              <Input v-model="config.name" :clearable="!editMode" :disabled="editMode"/>
+            </FormItem>
+          </Col>
+          <Col span="12">
+            <FormItem label="配置项值" prop="value">
+              <Input v-model="config.value" clearable/>
+            </FormItem>
+          </Col>
+        </Row>
+      </Form>
+      <div slot="footer" style="text-align: center">
+        <Button type="error" style="width:200px" ghost @click="cancel">取消</Button>
+        <Button type="success" style="width:200px" ghost @click="submit" :loading="submitLoading">提交</Button>
       </div>
+    </Modal>
 
-      <Table border :data="configs" :columns="col" :loading="configsLoading"></Table>
-
-      <Modal v-model="modalDisplayFlag" :title="modalTitle" @on-cancel="cancel">
-        <Form :model="config" label-position="top" :rules="configRules" ref="config">
-          <Row :gutter="16">
-            <Col span="12">
-              <FormItem label="所属的应用" prop="application">
-                <Select v-model="config.application" :disabled="editMode">
-                  <Option v-for="item in configApplications" :value="item" :key="item">{{ item }}</Option>
-                </Select>
-              </FormItem>    
-            </Col>
-            <Col span="12">
-              <FormItem label="所属的Profile" prop="profile" v-show="noProfile">
-                <Select v-model="config.profile" :disabled="editMode">
-                  <Option v-for="item in configProfiles" :value="item" :key="item">{{ item }}</Option>
-                  <!-- <Option v-else value="无" >无</Option> -->
-                </Select>
-                </FormItem>
-            </Col>
-          </Row>
-          <Row :gutter="16">
-            <Col span="12">
-              <FormItem label="配置项名称" prop="name">
-                <Input v-model="config.name" :clearable="!editMode" :disabled="editMode" />
-              </FormItem>
-            </Col>
-            <Col span="12">
-              <FormItem label="配置项值" prop="value">
-                <Input v-model="config.value" clearable />
-              </FormItem>
-            </Col>
-          </Row>    
-        </Form>
-          <div slot="footer" style="text-align: center">
-            <Button type="error" style="width:200px" ghost @click="cancel">取消</Button>
-            <Button type="success" style="width:200px" ghost @click="submit" :loading="submitLoading">提交</Button>
-          </div>
-        </Modal>
-
-        <Modal v-model="importModalDisplayFlag" title="导入配置" @on-cancel="importCancel">
-        <Form :model="config" label-position="top" :rules="configRules" ref="import">
-          <Row :gutter="16">
-            <Col span="12">
-              <FormItem label="所属的应用" prop="application">
-                <Select v-model="config.application">
-                  <Option v-for="item in configApplications" :value="item" :key="item">{{ item }}</Option>
-                </Select>
-              </FormItem>    
-            </Col>
-            <Col span="12">
-              <FormItem label="所属的Profile" prop="profile" v-show="noProfile">
-                <Select v-model="config.profile">
-                  <Option v-for="item in configProfiles" :value="item" :key="item">{{ item }}</Option>
-                  <!-- <Option v-else value="无" >无</Option> -->
-                </Select>
-                </FormItem>
-            </Col>
-          </Row>
-          <Upload multiple type="drag" action="//jsonplaceholder.typicode.com/posts/" disabled>
-            <div style="padding: 20px 0">
+    <Modal
+      v-model="importModalDisplayFlag"
+      title="导入配置"
+      @on-cancel="importCancel"
+      :footer-hide="true"
+    >
+      <Form :model="config" label-position="top" :rules="configRules" ref="import">
+        <Row :gutter="16">
+          <Col span="12">
+            <FormItem label="所属的应用" prop="application">
+              <Select v-model="config.application">
+                <Option v-for="item in configApplications" :value="item" :key="item">{{ item }}</Option>
+              </Select>
+            </FormItem>
+          </Col>
+          <Col span="12">
+            <FormItem label="所属的Profile" prop="profile" v-show="noProfile">
+              <Select v-model="config.profile">
+                <Option v-for="item in configProfiles" :value="item" :key="item">{{ item }}</Option>
+                <!-- <Option v-else value="无" >无</Option> -->
+              </Select>
+            </FormItem>
+          </Col>
+        </Row>
+        <Uploader
+          :url="uploadUrl"
+          type="drag"
+          :extension="['yml','properties']"
+          :display-flag="uploaderDisplayFlag"
+        >
+          <div style="padding: 20px 0">
             <Icon type="ios-cloud-upload" size="52" style="color: #3399ff"></Icon>
             <p>点击或拖拽配置文件至此来上传（.properties、.yml）</p>
-            </div>
-          </Upload>
-        </Form>
-          <div slot="footer" style="text-align: center">
-            <Button type="error" style="width:200px" ghost @click="importCancel">取消</Button>
-            <Button type="success" style="width:200px" ghost @click="importSubmit" :loading="submitLoading">提交</Button>
           </div>
-        </Modal>
-
-      
-    </div>
+        </Uploader>
+      </Form>
+      <!-- <div slot="footer" style="text-align: center">
+        <Button type="error" style="width:200px" ghost @click="importCancel">取消</Button>
+        <Button
+          type="success"
+          style="width:200px"
+          ghost
+          @click="importSubmit"
+          :loading="submitLoading"
+        >提交</Button>
+      </div>-->
+    </Modal>
+  </div>
 </template>
 <script>
+import Uploader from "./Uploader.vue";
+
 export default {
+  components: {
+    Uploader: Uploader
+  },
+  computed: {
+    uploadUrl: function() {
+      return `/config/${this.config.application}/import${
+        this.config.profile ? "?profile=" + this.config.profile : ""
+      }`;
+    }
+  },
   data() {
     return {
       configs: [],
@@ -134,7 +159,7 @@ export default {
         value: [{ required: true, message: "值不能为空", trigger: "blur" }]
       },
       importModalDisplayFlag: false,
-
+      uploaderDisplayFlag: false,
       col: [
         { type: "selection", width: 60, align: "center" },
         { title: "配置项名称", key: "key" },
@@ -211,6 +236,7 @@ export default {
     "config.application"() {
       // console.log(this.config.application);
       if (this.config.application) {
+        this.uploaderDisplayFlag = true;
         this.$http
           .get(`/server/${this.config.application}/profile`)
           .then(resp => {
@@ -339,12 +365,12 @@ export default {
         this.$Message.error("请先指定一个应用及Profile");
         return;
       }
-      this.$http
-        .post(`/config/${this.application}/export.${name}`, {
+      this.$ajax
+        .post(`/config/${this.application}/export.${name}`)
+        .form({
           profile: this.profile
         })
-        .then(() => {});
-      console.log(name);
+        .download(`${this.application}-${this.profile}.${name}`);
     }
   }
 };
