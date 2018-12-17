@@ -96,7 +96,7 @@
           :url="uploadUrl"
           type="drag"
           :extension="['yml','properties']"
-          :display-flag="uploaderDisplayFlag"
+          :trigger="uploaderTrigger"
         >
           <div style="padding: 20px 0">
             <Icon type="ios-cloud-upload" size="52" style="color: #3399ff"></Icon>
@@ -159,7 +159,8 @@ export default {
         value: [{ required: true, message: "值不能为空", trigger: "blur" }]
       },
       importModalDisplayFlag: false,
-      uploaderDisplayFlag: false,
+      uploaderTrigger: false,
+      // progressDisplayFlag: false,
       col: [
         { type: "selection", width: 60, align: "center" },
         { title: "配置项名称", key: "key" },
@@ -228,7 +229,7 @@ export default {
     // }
     application: function() {
       // this.loadConfigs(this.application);
-      this.$http.get(`/server/${this.application}/profile`).then(resp => {
+      this.$http.get(`/server/application/${this.application}/profile`).then(resp => {
         this.profiles = resp.data;
         this.profile = "";
       });
@@ -236,9 +237,9 @@ export default {
     "config.application"() {
       // console.log(this.config.application);
       if (this.config.application) {
-        this.uploaderDisplayFlag = true;
+        this.uploaderTrigger = true;
         this.$http
-          .get(`/server/${this.config.application}/profile`)
+          .get(`/server/application/${this.config.application}/profile`)
           .then(resp => {
             if (resp.data.length == 0) this.noProfile = false;
             else {
@@ -347,10 +348,14 @@ export default {
       this.$http.get("/user/application").then(resp => {
         this.configApplications = resp.data;
         this.importModalDisplayFlag = true;
+        this.uploaderTrigger = false;
       });
     },
     importCancel() {
       this.importModalDisplayFlag = false;
+      // this.uploaderDisplayFlag = false;
+      // this.progressDisplayFlag = false;
+      this.uploaderTrigger = false;
       this.$refs.import.resetFields();
     },
     importSubmit() {

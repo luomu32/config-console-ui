@@ -1,7 +1,7 @@
 <template>
   <div>
     <Upload
-      v-show="displayFlag"
+      v-show="uploaderDisplayFlag"
       :action="url"
       :show-upload-list="false"
       :type="type"
@@ -28,19 +28,30 @@ export default {
     },
     extension: Array,
     styles: String,
-    displayFlag: Boolean
+    trigger: Boolean
   },
   data() {
     return {
-      // displayFlag: true
+      uploaderDisplayFlag: false,
       progressRateDisplay: false,
       percent: 0
     };
   },
+  computed: {
+    // uploaderDisplayFlag: function() {
+    // return this.trigger;
+    // }
+  },
+  watch: {
+    trigger: function() {
+      this.progressRateDisplay = false;
+      this.uploaderDisplayFlag = this.trigger;
+    }
+  },
   methods: {
     beforeUpload() {
       this.$Loading.start();
-      this.displayFlag = false;
+      this.uploaderDisplayFlag = false;
       this.progressRateDisplay = true;
     },
     updateFormatError() {
@@ -54,11 +65,14 @@ export default {
     uploadSuccess: function(response, file) {
       this.$Loading.finish();
       this.$Message.success(`文件：${file.name}上传成功`);
+      this.uploaderDisplayFlag = false;
+      this.progressRateDisplay = true;
     },
     uploadError: function(error, file, filelist) {
       this.$Message.error(`文件：${filelist.name}上传失败`);
       this.$Loading.finish();
-      this.displayFlag = true;
+      this.uploaderDisplayFlag = true;
+      this.progressRateDisplay = false;
     }
   }
 };

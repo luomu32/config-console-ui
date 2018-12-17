@@ -1,5 +1,5 @@
 <template>
-  <Modal v-model="importModalDisplayFlag" :title="title" @on-cancel="cancel">
+  <Modal v-model="modalDisplayFlag" :title="title" @on-cancel="cancel">
     <Form :model="model" label-position="top" :rules="rules" ref="form">
       <slot></slot>
     </Form>
@@ -10,19 +10,31 @@
   </Modal>
 </template>
 <script>
-import Modal from "./components/Modal.vue";
+// import Modal from "./components/Modal.vue";
 
 export default {
-  props: ["rules", "displayFlag", "model", "title"],
+  props: {
+    rules: Array,
+    displayFlag: Boolean,
+    model: { type: Object },
+    title: String
+  },
+  watch: {
+    displayFlag() {
+      console.log(this.displayFlag);
+      this.modalDisplayFlag = this.displayFlag;
+    }
+  },
   data() {
     return {
-      submitLoading: false
+      submitLoading: false,
+      modalDisplayFlag: this.displayFlag
     };
   },
   methods: {
     cancel() {
-      this.displayFlag = false;
-      this.$refs.form.restFields();
+      this.modalDisplayFlag = false;
+      this.$refs.form.resetFields();
     },
     submit() {
       this.$refs.form.validate(valid => {
