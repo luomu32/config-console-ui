@@ -168,14 +168,18 @@ class Http {
             responseType: this.options.responseType,
             data: this.options.form ? this.options.form : this.options.body
         }).then((resp) => {
-            if (resp.status === 200 || resp.status === 204)
+            if ((resp.status === 200 && !resp.data.message) || resp.status === 204)
                 resultProcessor.success(resp)
             else {
+                if (resp.data.message)
+                    Message.error(resp.data.message)
                 resultProcessor.failed(resp)
             }
-            resultProcessor.finally()
+            if (resultProcessor && resultProcessor.finally)
+                resultProcessor.finally()
         }).catch(() => {
-            resultProcessor.finally()
+            if (resultProcessor && resultProcessor.finally)
+                resultProcessor.finally()
         })
     }
     download(filename) {
