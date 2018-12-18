@@ -10,37 +10,49 @@
   </Modal>
 </template>
 <script>
-// import Modal from "./components/Modal.vue";
-
 export default {
   props: {
-    rules: Array,
-    displayFlag: Boolean,
+    rules: Object,
+    value: Boolean,
     model: { type: Object },
-    title: String
+    title: String,
+    url: String
   },
   watch: {
-    displayFlag() {
-      console.log(this.displayFlag);
-      this.modalDisplayFlag = this.displayFlag;
+    value() {
+      this.modalDisplayFlag = this.value;
     }
   },
   data() {
     return {
       submitLoading: false,
-      modalDisplayFlag: this.displayFlag
+      modalDisplayFlag: this.value
     };
   },
   methods: {
     cancel() {
-      this.modalDisplayFlag = false;
+      // this.modalDisplayFlag = false;
+      this.$emit("closed");
       this.$refs.form.resetFields();
     },
     submit() {
       this.$refs.form.validate(valid => {
-        if (valid) {
+        if (valid && this.url) {
           this.submitLoading = true;
           //http
+          this.$ajax
+            .post(this.url)
+            .form(this.model)
+            .send({
+              success: () => {
+                
+                this.cancel();
+                this.$emit("send-success");
+              },
+              finally: () => {
+                this.submitLoading = false;
+              }
+            });
         }
       });
     }
