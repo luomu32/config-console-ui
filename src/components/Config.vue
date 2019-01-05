@@ -14,7 +14,7 @@
         </Col>
         <Col span="12" style="text-align:right">
           <ButtonGroup>
-            <Button icon="md-add" @click="showModal(false)">创建配置</Button>
+            <Button icon="md-add" v-authority="'add'" @click="showModal(false)">创建配置</Button>
             <Button icon="md-arrow-up" @click="showImportModal()">导入配置</Button>
             <Dropdown style="text-align:left" @on-click="exportConfig">
               <Button icon="md-download">导出配置</Button>
@@ -28,7 +28,12 @@
       </Row>
     </div>
 
-    <Table border :data="configs" :columns="col" :loading="configsLoading"></Table>
+    <Table border :data="configs" :columns="col" :loading="configsLoading">
+      <template slot-scope="{ row }" slot="action">
+        <OperatorButton v-authority="'edit'" @click="showModal(true, row.key, row.value)">编辑</OperatorButton>
+        <OperatorDeleteButton @on-ok="remove(row.key)" v-authority="'del'">删除</OperatorDeleteButton>
+      </template>
+    </Table>
 
     <Modal v-model="modalDisplayFlag" :title="modalTitle" @on-cancel="cancel">
       <Form :model="config" label-position="top" :rules="configRules" ref="config">
@@ -119,16 +124,25 @@
 </template>
 <script>
 import Uploader from "./Uploader.vue";
+import ModalForm from "../components/ModalForm.vue";
+import OperatorButton from "../components/OperatorButton.vue";
+import OperatorDeleteButton from "../components/OperatorDeleteButton.vue";
 
 export default {
   components: {
-    Uploader: Uploader
+    Uploader: Uploader,
+    ModalForm: ModalForm,
+    OperatorButton: OperatorButton,
+    OperatorDeleteButton: OperatorDeleteButton
   },
   computed: {
     uploadUrl: function() {
       return `/config/${this.config.application}/import${
         this.config.profile ? "?profile=" + this.config.profile : ""
       }`;
+    },
+    actions() {
+      return this.$store.getters.actionsUnderMenu(this.$route.name);
     }
   },
   data() {
@@ -169,51 +183,7 @@ export default {
           title: "操作",
           align: "center",
           width: 200,
-          render: (h, params) => {
-            return h("div", [
-              h(
-                "Button",
-                {
-                  props: {
-                    size: "small"
-                  },
-                  style: {
-                    marginRight: "15px"
-                  },
-                  on: {
-                    click: () => {
-                      this.showModal(true, params.row.key, params.row.value);
-                    }
-                  }
-                },
-                "编辑"
-              ),
-              h(
-                "Poptip",
-                {
-                  props: {
-                    confirm: true,
-                    title: "确定要删除吗？",
-                    transfer: true
-                  },
-                  on: {
-                    "on-ok": () => {
-                      this.remove(params.row.key);
-                    }
-                  }
-                },
-                [
-                  h(
-                    "Button",
-                    {
-                      props: { size: "small", type: "error", icon: "md-trash" }
-                    },
-                    "删除"
-                  )
-                ]
-              )
-            ]);
-          }
+          slot: "action"
         }
       ]
     };
@@ -229,10 +199,12 @@ export default {
     // }
     application: function() {
       // this.loadConfigs(this.application);
-      this.$http.get(`/server/application/${this.application}/profile`).then(resp => {
-        this.profiles = resp.data;
-        this.profile = "";
-      });
+      this.$http
+        .get(`/server/application/${this.application}/profile`)
+        .then(resp => {
+          this.profiles = resp.data;
+          this.profile = "";
+        });
     },
     "config.application"() {
       // console.log(this.config.application);
@@ -376,6 +348,9 @@ export default {
           profile: this.profile
         })
         .download(`${this.application}-${this.profile}.${name}`);
+    },
+    isInAction(type) {
+      return this.actions.some(a => a.type == type);
     }
   }
 };

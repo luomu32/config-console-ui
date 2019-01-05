@@ -55,7 +55,7 @@
   </div>
 </template>
 <script>
-import ModalForm from "./ModalForm.vue";
+import ModalForm from "../components/ModalForm.vue";
 
 export default {
   components: {

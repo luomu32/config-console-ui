@@ -1,11 +1,24 @@
 import axios from "axios";
 import { Message } from 'iview'
-import router from '@/route.js'
+import router from '@/router.js'
 
 axios.defaults.baseURL = ''
 axios.defaults.withCredentials = true
 axios.interceptors.response.use(
     response => {
+        // if (response.status === 200 && response.data.message) {
+        //     return new Promise((resolve, reject) => {
+        //         Message.error(response.data.message)
+        //         reject()
+        //     }).catch(() => { })
+        //     return Promise.reject(response.data.message).then(() => {
+        //         // 未被调用
+        //     }, (message) => {
+        //         // console.log(reason); // "Testing static reject"
+        //         Message.error(message)
+        //     });
+        // }
+
         return response;
     },
     error => {
@@ -54,8 +67,8 @@ axios.interceptors.response.use(
             // console.log('Error', error.message);
         }
         // console.log(error.config);
-
-        return Promise.reject(error);
+        return new Promise(() => { });
+        // return Promise.reject(error);
     }
 )
 function has(browser) {
@@ -160,33 +173,77 @@ class Http {
         this.options.body = params
         return this
     }
-    send(resultProcessor) {
-        axios({
-            method: this.options.method,
-            url: this.options.url,
-            params: this.options.urlParams,
-            responseType: this.options.responseType,
-            data: this.options.form ? this.options.form : this.options.body
-        }).then((resp) => {
-            if ((resp.status === 200 && !resp.data.message) || resp.status === 204)
-                resultProcessor.success(resp)
-            else {
-                if (resp.data.message)
-                    Message.error(resp.data.message)
-                resultProcessor.failed(resp)
-            }
-            if (resultProcessor && resultProcessor.finally)
-                resultProcessor.finally()
-        }).catch(() => {
-            if (resultProcessor && resultProcessor.finally)
-                resultProcessor.finally()
+    // send(resultProcessor) {
+    //     axios({
+    //         method: this.options.method,
+    //         url: this.options.url,
+    //         params: this.options.urlParams,
+    //         responseType: this.options.responseType,
+    //         data: this.options.form ? this.options.form : this.options.body
+    //     }).then((resp) => {
+    //         if ((resp.status === 200 && !resp.data.message) || resp.status === 204)
+    //             resultProcessor.success(resp)
+    //         else {
+    //             if (resp.data.message)
+    //                 Message.error(resp.data.message)
+    //             resultProcessor.failed(resp)
+    //         }
+    //         if (resultProcessor && resultProcessor.finally)
+    //             resultProcessor.finally()
+    //     }).catch(() => {
+    //         if (resultProcessor && resultProcessor.finally)
+    //             resultProcessor.finally()
+    //     })
+    // }
+    send() {
+        // $ajax.get('').success(()=>{}).failed(()=>{}).finally(()=>{})
+        //1.如果成功，success内的回调会被调用，finally内的回调也会被调用
+        //2.如果失败，failed内的回调会被调用，finally内的回调也会被调用
+        return new Promise((resolve, reject) => {
+            axios({
+                method: this.options.method,
+                url: this.options.url,
+                params: this.options.urlParams,
+                responseType: this.options.responseType,
+                data: this.options.form ? this.options.form : this.options.body
+            }).then((resp) => {
+                if ((resp.status === 200 && !resp.data.message) || resp.status === 204)
+                    resolve(resp)
+                else {
+                    if (resp.data.message)
+                        Message.error(resp.data.message)
+                    reject()
+                }
+            }).catch(() => {
+                reject()
+            })
         })
     }
     download(filename) {
         if (this.options.method === 'get' || this.options.method === 'delete')
             return
         this.options.responseType = 'blob'
-        let resultProcessor = new HttpResult((resp) => {
+        // let resultProcessor = new HttpResult((resp) => {
+        //     if (has('ie') && has('ie') < 10) {
+        //         const oWin = window.top.open('about:blank', '_blank');
+        //         oWin.document.charset = 'utf-8';
+        //         oWin.document.write(resp.data);
+        //         oWin.document.close();
+        //         oWin.document.execCommand('SaveAs', filename);
+        //         oWin.close();
+        //     } else if (has('ie') === 10 || _isIE11() || _isEdge()) {
+        //         const csvData = new Blob([resp.data]);
+        //         navigator.msSaveBlob(csvData, filename);
+        //     } else {
+        //         const link = document.createElement('a');
+        //         link.download = filename;
+        //         link.href = _getDownloadUrl(resp.data);
+        //         document.body.appendChild(link);
+        //         link.click();
+        //         document.body.removeChild(link);
+        //     }
+        // })
+        this.send().then((resp) => {
             if (has('ie') && has('ie') < 10) {
                 const oWin = window.top.open('about:blank', '_blank');
                 oWin.document.charset = 'utf-8';
@@ -205,29 +262,43 @@ class Http {
                 link.click();
                 document.body.removeChild(link);
             }
-        })
-        this.send(resultProcessor)
+        }).catch(() => { })
     }
 }
 class HttpResult {
-    constructor(successCallBack, failedCallBack, finallyCallBack) {
-        this.successCallBack = successCallBack
-        this.failedCallBack = failedCallBack
-        this.finallyCallBack = finallyCallBack
+
+    constructor(promise) {
+        // this.promise = promise
+        // promise.then((resp) => {
+        //     if (this.successCallback) {
+        //         this.successCallback(resp)
+        //     }
+        // }).catch(() => {
+
+        // })
     }
-    success(resp) {
-        if (this.successCallBack)
-            this.successCallBack(resp)
+    success(callback) {
+        // if (callback &&
+        //     (
+        //         this.respoonse.status === 204
+        //         || (this.respoonse.status === 200 && !this.respoonse.data.message)
+        //     )
+        // )
+        //     callback(this.response)
+        this.successCallback = callback
         return this;
     }
-    failed(resp) {
-        if (this.failedCallBack)
-            this.failedCallBack(resp)
+    failed(callback) {
+        if (callback &&
+            ((this.response.status != 200 && this.respoonse.status != 204)
+                || (this.respoonse.status === 200 && this.response.data.message))
+        )
+            callback(this.response)
         return this;
     }
-    finally() {
-        if (this.finallyCallBack)
-            this.finallyCallBack()
+    finally(callback) {
+        if (callback)
+            callback()
         return this;
     }
 }

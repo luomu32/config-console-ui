@@ -3,31 +3,22 @@
     <Sider hide-trigger :width="256" class="left-sider" :style="{overflow: 'hidden'}">
       <div class="logo-con">配置中心管理平台</div>
       <Menu theme="dark" :active-name="activeMenuName" width="auto">
-        <MenuItem name="server" to="/server">
-          <Icon type="md-filing"></Icon>资源库管理
-        </MenuItem>
-        <MenuItem name="application" to="/application">
-          <Icon type="md-apps"></Icon>应用管理
-        </MenuItem>
-        <MenuItem name="config" to="/config">
-          <Icon type="md-apps"></Icon>配置管理
-        </MenuItem>
-        <MenuItem name="3">
-          <Icon type="md-key"></Icon>加密设置
-        </MenuItem>
-        <MenuItem name="user" to="/user">
-          <Icon type="md-person"></Icon>用户管理
-        </MenuItem>
-        <MenuItem name="role" to="/role">
-          <Icon type="md-people"></Icon>角色管理
-        </MenuItem>
-        <MenuItem name="log" to="/log">
-          <Icon type="ios-archive"></Icon>操作日志
+        <MenuItem
+          :name="menu.name"
+          :to="{path:menu.url,params:{menuId:'ddd'}}"
+          v-for="menu in menus"
+          :key="menu.name"
+        >
+          <Icon :type="menu.icon"></Icon>
+          {{menu.title}}
         </MenuItem>
       </Menu>
     </Sider>
     <Layout>
       <Header class="header-con">
+        {{user.username}}
+        <Tag>{{user.roleName}}</Tag>
+        <Button>修改密码</Button>
         <Button @click="loginOut" icon="md-log-out">退出</Button>
       </Header>
       <Content class="content-wrapper">
@@ -37,14 +28,6 @@
   </Layout>
 </template>
 <style lang="less">
-/* .container{
-    height: 100%;
-}
-.content{
-    border-radius: 5px;
-    height: 100%;
-    margin-bottom: -20px;
-} */
 .logo-con {
   height: 64px;
   padding: 0px;
@@ -58,6 +41,7 @@
   background: #fff;
   padding: 0 20px;
   width: 100%;
+  text-align: right;
 }
 .content-wrapper {
   padding: 18px;
@@ -84,10 +68,19 @@
 }
 </style>
 <script>
-import cookie from "js-cookie";
+import { mapGetters } from "vuex";
 export default {
   mounted() {
-    this.activeMenuName = this.$route.name;
+    const name = this.$route.name;
+    if (name === "home") {
+      this.activeMenuName = "";
+    } else {
+      this.activeMenuName = name;
+    }
+    // console.log(this.actions);
+  },
+  computed: {
+    ...mapGetters(["user", "actions", "menus"])
   },
   data() {
     return {
@@ -96,12 +89,16 @@ export default {
   },
   methods: {
     loginOut: function() {
-      this.$ajax.post("/sing-out").send({
-        success: () => {
-          cookie.remove("token");
-          this.$router.replace({ name: "login" });
-        }
-      });
+      this.$ajax
+        .post("/sing-out")
+        .send()
+        .then(
+          resp => {
+            this.$store.commit("clear");
+            this.$router.replace({ name: "login" });
+          },
+          () => {}
+        );
     }
   }
 };

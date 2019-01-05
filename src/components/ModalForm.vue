@@ -1,5 +1,5 @@
 <template>
-  <Modal v-model="modalDisplayFlag" :title="title" @on-cancel="cancel">
+  <Modal v-model="modalDisplayFlag" :title="modalTitle" @on-cancel="cancel">
     <Form :model="model" label-position="top" :rules="rules" ref="form">
       <slot></slot>
     </Form>
@@ -16,11 +16,25 @@ export default {
     value: Boolean,
     model: { type: Object },
     title: String,
-    url: String
+    edit: { type: Boolean, default: false },
+    editModal: { type: Boolean, default: false },
+    paramsType: { type: String, default: "form" },
+    url: String,
+    modelId: String
   },
   watch: {
     value() {
       this.modalDisplayFlag = this.value;
+    }
+  },
+  computed: {
+    modalTitle() {
+      if (!this.editModal) {
+        return this.title;
+      } else {
+        if (this.edit) return `编辑${this.title}`;
+        else return `新增${this.title}`;
+      }
     }
   },
   data() {
@@ -30,6 +44,9 @@ export default {
     };
   },
   methods: {
+    show() {
+      this.modalDisplayFlag = true;
+    },
     cancel() {
       // this.modalDisplayFlag = false;
       this.$emit("closed");
@@ -39,20 +56,25 @@ export default {
       this.$refs.form.validate(valid => {
         if (valid && this.url) {
           this.submitLoading = true;
-          //http
-          this.$ajax
-            .post(this.url)
-            .form(this.model)
-            .send({
-              success: () => {
-                
-                this.cancel();
-                this.$emit("send-success");
-              },
-              finally: () => {
-                this.submitLoading = false;
-              }
-            });
+          const resultProcessor = {
+            success: () => {
+              this.cancel();
+              this.$emit("send-success");
+            },
+            finally: () => {
+              this.submitLoading = false;
+            }
+          };
+
+          let ajax;
+          if (!this.editModal || (this.editModal && !this.edit)) {
+            ajax = this.$ajax.post(this.url);
+          } else {
+            ajax = this.$ajax.put(`${this.url}/${this.modelId}`);
+          }
+          if (this.paramsType === "form") ajax.form(this.model);
+          else ajax.body(this.model);
+          ajax.send(resultProcessor);
         }
       });
     }
