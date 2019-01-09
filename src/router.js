@@ -10,14 +10,14 @@ const router = new VueRouter({
     routes: [
         {
             path: "/", name: "home", component: () => import("./views/Layout.vue"), children: [
-                { path: 'server', name: 'server', component: () => import("./components/Server.vue") },
-                { path: "config", name: "config", component: () => import("./components/Config.vue") },
+                { path: 'server', name: 'server', component: () => import("./views/Server.vue") },
+                { path: "config", name: "config", component: () => import("./views/Config.vue") },
                 { path: "log", name: "log", component: () => import("./views/Log.vue") },
                 {
                     path: 'user', name: "user", component: () => import("./views/user/User.vue")
                 },
                 {
-                    path: "user/:id/application", name: "userApplication", component: () => import("./components/UserApplication.vue")
+                    path: "user/:id/application", name: "userApplication", component: () => import("./views/UserApplication.vue")
                 }
                 , {
                     path: "role", name: "role", component: () => import("./views/Role.vue")

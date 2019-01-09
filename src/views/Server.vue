@@ -64,7 +64,7 @@
     </div>
 </template>
 <script>
-import ServerConfig from "./ServerConfig.vue";
+// import ServerConfig from "./ServerConfig.vue";
 
 export default {
   data() {
@@ -276,7 +276,7 @@ export default {
     }
   },
   components: {
-    ServerConfig
+    // ServerConfig
   }
 };
 </script>

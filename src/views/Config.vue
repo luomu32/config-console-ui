@@ -123,7 +123,7 @@
   </div>
 </template>
 <script>
-import Uploader from "./Uploader.vue";
+import Uploader from "../components/Uploader.vue";
 import ModalForm from "../components/ModalForm.vue";
 import OperatorButton from "../components/OperatorButton.vue";
 import OperatorDeleteButton from "../components/OperatorDeleteButton.vue";
@@ -140,9 +140,6 @@ export default {
       return `/config/${this.config.application}/import${
         this.config.profile ? "?profile=" + this.config.profile : ""
       }`;
-    },
-    actions() {
-      return this.$store.getters.actionsUnderMenu(this.$route.name);
     }
   },
   data() {
@@ -348,9 +345,6 @@ export default {
           profile: this.profile
         })
         .download(`${this.application}-${this.profile}.${name}`);
-    },
-    isInAction(type) {
-      return this.actions.some(a => a.type == type);
     }
   }
 };
