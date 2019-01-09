@@ -10,10 +10,10 @@ const User = new Vuex.Store({
             id: "",
             username: "",
             roleId: "",
-            roleName: "",
-            menus: [],
-            actions: []
-        }
+            roleName: ""
+        },
+        menus: "",
+        actions: ""
     },
     getters: {
         user: state => {
@@ -26,11 +26,17 @@ const User = new Vuex.Store({
                 return state.user
             }
         },
-        actions: (state, getters) => {
-            if (!getters.user.actions)
+        actions: (state) => {
+            // if (!getters.user.actions)
+            //     return []
+            // return getters.user.actions
+            if (state.actions)
+                return state.actions
+            try {
+                return JSON.parse(sessionStorage.getItem('actions'))
+            } catch (e) {
                 return []
-            // return ALL_MENUS.filter(m => getters.user.menus.indexOf(m.name) != -1)
-            return getters.user.actions
+            }
         },
         actionsUnderMenu: (state, getters) => (menuName) => {
             if (getters.menus.length == 0)
@@ -40,11 +46,18 @@ const User = new Vuex.Store({
                 return []
             return getters.actions.filter(m => m.menuId == menus[0].id)
         },
-        menus: (state, getters) => {
-            const menus = getters.user.menus
-            if (!menus)
+        menus: (state) => {
+            // const menus = getters.user.menus
+            // if (!menus)
+            //     return []
+            // return menus
+            if (state.menus)
+                return state.menus
+            try {
+                return JSON.parse(sessionStorage.getItem('menus'))
+            } catch (e) {
                 return []
-            return menus
+            }
         }
     },
     mutations: {
@@ -54,10 +67,22 @@ const User = new Vuex.Store({
             state.user.roleId = user.roleId
             state.user.roleName = user.roleName
             // state.user.expireAt = user.expireAt
-            state.user.menus = user.menus
-            state.user.actions = user.actions
+            state.menus = user.permission.menus
+            state.actions = user.permission.actions
             try {
                 sessionStorage.setItem("user", JSON.stringify(state.user))
+                sessionStorage.setItem("menus", JSON.stringify(state.menus))
+                sessionStorage.setItem("actions", JSON.stringify(state.actions))
+            } catch (e) {
+                //
+            }
+        },
+        updatePermission(state, permission) {
+            state.menus = permission.menus
+            state.actions = permission.actions
+            try {
+                sessionStorage.setItem("menus", JSON.stringify(state.menus))
+                sessionStorage.setItem("actions", JSON.stringify(state.actions))
             } catch (e) {
                 //
             }
@@ -68,10 +93,12 @@ const User = new Vuex.Store({
             state.user.roleId = ""
             state.user.roleName = ""
             // state.user.expireAt = ""
-            state.user.menus = []
-            state.user.actions = []
+            state.menus = ""
+            state.actions = ""
             try {
                 sessionStorage.removeItem("user")
+                sessionStorage.removeItem("menus")
+                sessionStorage.removeItem("actions")
             } catch (e) {
                 //
             }

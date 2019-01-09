@@ -1,33 +1,46 @@
 <template>
-    <div>
-        <div class="query-bar">
-            <Row>
-                <Col span="16">
-                    <label>用户名：</label>
-                    <Input style="width:120px;" v-model="operatorName"></Input>
-                    <label>应用：</label>
-                    <Input style="width:120px;" v-model="application"></Input>
-                    <label>创建时间：</label>
-                    <DatePicker type="daterange" placeholder="开始日期-----结束时间" style="width: 190px;"
-                    @on-change="startDateChange" :options="datePickerOptions"></DatePicker>
-                    <!-- <DatePicker type="date" placeholder="结束日期" style="width: 120px" @on-change="endDateChange" ></DatePicker> -->
-                </Col>
-                <Col span="8" style="text-align:right">
-                    <Button @click="loadLogs()">查询</Button>
-                </Col>
-            </Row>
-            
-        </div>
-        <Table border :data="logs" :columns="col" :loading="logsLogading" @on-sort-change="sortChange"></Table>
-        <div class="page">
-            <Page :total="logsTotal" ref="page" show-sizer show-total @on-change="pageChange" @on-page-size-change="pageSizeChange" />
-        </div>
+  <div>
+    <div class="query-bar">
+      <Row>
+        <Col span="16">
+          <label>用户名：</label>
+          <Input style="width:120px;" v-model="operatorName"></Input>
+          <label>应用：</label>
+          <Input style="width:120px;" v-model="application"></Input>
+          <label>创建时间：</label>
+          <DatePicker
+            type="daterange"
+            placeholder="开始日期-----结束时间"
+            style="width: 190px;"
+            @on-change="startDateChange"
+            :options="datePickerOptions"
+          ></DatePicker>
+          <!-- <DatePicker type="date" placeholder="结束日期" style="width: 120px" @on-change="endDateChange" ></DatePicker> -->
+        </Col>
+        <Col span="8" style="text-align:right">
+          <Button @click="loadLogs()">查询</Button>
+        </Col>
+      </Row>
     </div>
+
+    <TablePage
+      :data="logs"
+      :columns="col"
+      :total="logsTotal"
+      :loading="logsLogading"
+      @pageChange="pageChange"
+      @sortChange="sortChange"
+    ></TablePage>
+  </div>
 </template>
 <script>
+import TablePage from "../components/TablePage.vue";
+
 export default {
+  components: {
+    TablePage: TablePage
+  },
   mounted() {
-    // console.log(new Date());
     this.loadLogs();
   },
   data() {
@@ -37,9 +50,9 @@ export default {
         { title: "用户", key: "operatorName" },
         { title: "应用", key: "application" },
         {
-          title: "剖面",
+          title: "Profile",
           key: "profile",
-          width: 70
+          width: 90
         },
         { title: "配置项", key: "configKey" },
         {
@@ -71,6 +84,7 @@ export default {
       application: "",
       startDate: "",
       endDate: "",
+      pageSize: 10,
       datePickerOptions: {
         disabledDate(date) {
           return date && date.valueOf() > Date.now();
@@ -96,7 +110,7 @@ export default {
     };
   },
   methods: {
-    loadLogs(page = 1, size = 10, sort) {
+    loadLogs(page = 1, size = this.pageSize, sort) {
       this.logsLogading = true;
       let sortStr = "";
       if (sort) {
@@ -123,29 +137,18 @@ export default {
           this.logsLogading = false;
         });
     },
-    pageChange(page) {
-      const size = this.$refs.page.currentPageSize;
-      this.loadLogs(page, size);
-    },
-    pageSizeChange(size) {
-      const page = this.$refs.page.currentPage;
-      if (page == 1) {
-        this.loadLogs(1, size);
-      }
+    pageChange({ pageNo, pageSize }) {
+      this.pageSize = pageSize;
+      this.loadLogs(pageNo, pageSize);
     },
     startDateChange(value, type) {
-      // console.log(value)
       this.startDate = value[0];
       this.endDate = value[1];
     },
-    endDateChange(value) {
-      this.endDate = value;
-    },
+    // endDateChange(value) {
+    //   this.endDate = value;
+    // },
     sortChange(p) {
-      console.log(p);
-      //   console.log(key);
-      //   console.log(order);
-
       this.loadLogs(null, null, {
         key: p.key,
         type: p.order === "normal" ? "desc" : p.order

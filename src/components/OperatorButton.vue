@@ -1,7 +1,7 @@
 <template>
   <Button
     :type="type"
-    size="small"
+    :size="size"
     @click="handleClick"
     :loading="loading"
     style="margin-right: 5px"
@@ -19,6 +19,10 @@ export default {
     loading: {
       type: Boolean,
       default: false
+    },
+    size: {
+      type: String,
+      default: "small"
     }
   },
   methods: {

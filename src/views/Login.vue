@@ -83,18 +83,6 @@ export default {
     handleSubmit: function() {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
-          // this.$ajax
-          //   .post("auth")
-          //   .form(this.form)
-          //   .send({
-          //     success: resp => {
-          //       // Cookies.set("token", this.form.userName);
-          //       // console.log(this.$store);
-          //       this.$store.commit("set", resp.data);
-
-          //       this.$router.replace({ name: "home" });
-          //     }
-          //   });
           this.$ajax
             .post("auth")
             .form(this.form)

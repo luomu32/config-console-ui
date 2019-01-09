@@ -15,24 +15,25 @@
       </template>
     </Table>
 
-    <Drawer title="权限管理" :closable="true" v-model="permissionManageDisplayFlag">
+    <DrawerForm
+      ref="permission"
+      :loading="permissionsLoading"
+      title="权限管理"
+      @submit="grantPermission"
+    >
       <Tree :data="menuTree" show-checkbox multiple check-strictly ref="permissions"></Tree>
-      <!-- <div style="position:absolute;bottom:10px;width:auto"> -->
-      <Button long @click="grantPermission">保存</Button>
-      <!-- </div> -->
-    </Drawer>
+    </DrawerForm>
 
     <ModalForm
-      v-model="modalDisplayFlag"
       title="角色"
       :model="role"
+      ref="role"
       :rules="roleRules"
       :edit="editMode"
       :editModal="true"
       :modelId="roleId"
       url="/role"
       paramsType="body"
-      @closed="closRoleModal"
       @send-success="loadRoles"
     >
       <FormItem label="名称" prop="name">
@@ -45,6 +46,7 @@
 import ModalForm from "../components/ModalForm.vue";
 import OperatorButton from "../components/OperatorButton.vue";
 import OperatorDeleteButton from "../components/OperatorDeleteButton.vue";
+import DrawerForm from "../components/DrawerForm.vue";
 
 export default {
   mounted() {
@@ -53,13 +55,14 @@ export default {
   components: {
     ModalForm: ModalForm,
     OperatorButton: OperatorButton,
-    OperatorDeleteButton: OperatorDeleteButton
+    OperatorDeleteButton: OperatorDeleteButton,
+    DrawerForm: DrawerForm
   },
   data() {
     return {
       roles: [],
       rolesLoading: false,
-      modalDisplayFlag: false,
+      // modalDisplayFlag: false,
       editMode: false,
       role: {
         name: ""
@@ -68,7 +71,7 @@ export default {
       roleRules: {
         name: [{ required: true, message: "角色名称不能为空", trigger: "blur" }]
       },
-      permissionManageDisplayFlag: false,
+      permissionsLoading: false,
       menuTree: [],
       col: [
         { title: "名称", key: "name" },
@@ -102,12 +105,13 @@ export default {
         this.roleId = roleId.toString();
       }
       this.editMode = editMode;
-      this.modalDisplayFlag = true;
+      // this.modalDisplayFlag = true;
+      this.$refs.role.show();
       // }
     },
-    closRoleModal() {
-      this.modalDisplayFlag = false;
-    },
+    // closRoleModal() {
+    //   this.modalDisplayFlag = false;
+    // },
     remove(id) {
       if (id) {
         this.$ajax
@@ -124,39 +128,47 @@ export default {
     showPermissionManage(id) {
       if (id) {
         this.roleId = id.toString();
+        this.permissionsLoading = true;
+        this.$refs.permission.show();
         Promise.all([
-          this.$ajax.get("/menu-with-actions").send(),
-          this.$ajax.get(`/role/${id}/menus`).send()
+          this.$ajax.get("/permissions").send(),
+          this.$ajax.get(`/role/${id}/permissions`).send()
         ])
-          .then(([{ data: allMenus }, { data: rolePermissions }]) => {
+          .then(([{ data: allPermissions }, { data: rolePermissions }]) => {
             const permissionTree = new Array();
             permissionTree.push({
               title: "菜单",
               expand: true,
               disableCheckbox: true,
-              children: allMenus.map(menu => {
+              children: allPermissions.menus.map(menu => {
                 return {
-                  title: menu.menuName,
-                  id: menu.menuId,
+                  title: menu.title,
+                  id: menu.id,
                   expand: true,
                   action: false,
-                  checked: rolePermissions.menus.some(m => m == menu.menuId),
-                  children: menu.actions.map(action => {
-                    return {
-                      title: action.name,
-                      id: action.id,
-                      expand: true,
-                      action: true,
-                      checked: rolePermissions.actions.some(a => a == action.id)
-                    };
-                  })
+                  checked: rolePermissions.menus.some(
+                    m => m.id == menu.id
+                  ),
+                  children: allPermissions.actions
+                    .filter(action => action.menuId == menu.id)
+                    .map(action => {
+                      return {
+                        title: action.name,
+                        id: action.id,
+                        expand: true,
+                        action: true,
+                        checked: rolePermissions.actions.some(
+                          a => a.id == action.id
+                        )
+                      };
+                    })
                 };
               })
             });
             this.menuTree = permissionTree;
           })
           .finally(() => {
-            this.permissionManageDisplayFlag = true;
+            this.permissionsLoading = false;
           });
       }
     },
@@ -169,12 +181,14 @@ export default {
         else menus.push(element.id);
       });
       this.$ajax
-        .put("/grant-permission")
-        .form({ roleId: this.roleId, menus: menus, actions: actions })
+        .put(`/role/${this.roleId}/grant-permission`)
+        .form({ menus: menus, actions: actions })
         .send()
         .then(
-          () => {
+          resp => {
             this.$Message.success("设置权限成功");
+            this.$refs.permission.close()
+            this.$store.commit("updatePermission", resp.data);
           },
           () => {}
         )

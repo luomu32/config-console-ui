@@ -1,5 +1,5 @@
 <template>
-  <Modal v-model="modalDisplayFlag" :title="modalTitle" @on-cancel="cancel">
+  <Modal v-model="displayFlag" :title="modalTitle" @on-cancel="cancel">
     <Form :model="model" label-position="top" :rules="rules" ref="form">
       <slot></slot>
     </Form>
@@ -13,20 +13,22 @@
 export default {
   props: {
     rules: Object,
-    value: Boolean,
+    // value: Boolean,
     model: { type: Object },
     title: String,
+    form: { type: Object },
     edit: { type: Boolean, default: false },
     editModal: { type: Boolean, default: false },
     paramsType: { type: String, default: "form" },
+    httpMethod: { type: String, default: "post" },
     url: String,
     modelId: String
   },
-  watch: {
-    value() {
-      this.modalDisplayFlag = this.value;
-    }
-  },
+  // watch: {
+  //   value() {
+  //     this.modalDisplayFlag = this.value;
+  //   }
+  // },
   computed: {
     modalTitle() {
       if (!this.editModal) {
@@ -40,15 +42,15 @@ export default {
   data() {
     return {
       submitLoading: false,
-      modalDisplayFlag: this.value
+      displayFlag: false
     };
   },
   methods: {
     show() {
-      this.modalDisplayFlag = true;
+      this.displayFlag = true;
     },
     cancel() {
-      // this.modalDisplayFlag = false;
+      this.displayFlag = false;
       this.$emit("closed");
       this.$refs.form.resetFields();
     },
@@ -56,25 +58,39 @@ export default {
       this.$refs.form.validate(valid => {
         if (valid && this.url) {
           this.submitLoading = true;
-          const resultProcessor = {
-            success: () => {
-              this.cancel();
-              this.$emit("send-success");
-            },
-            finally: () => {
-              this.submitLoading = false;
-            }
-          };
 
           let ajax;
-          if (!this.editModal || (this.editModal && !this.edit)) {
-            ajax = this.$ajax.post(this.url);
+          if (this.editModal) {
+            if (!this.edit) {
+              ajax = this.$ajax.post(this.url);
+            } else {
+              ajax = this.$ajax.put(`${this.url}/${this.modelId}`);
+            }
           } else {
-            ajax = this.$ajax.put(`${this.url}/${this.modelId}`);
+            if (this.httpMethod == "post") {
+              ajax = this.$ajax.post(this.url);
+            } else ajax = this.$ajax.put(this.url);
           }
+
+          //filter model
+          //if not display or disable not send to server
           if (this.paramsType === "form") ajax.form(this.model);
           else ajax.body(this.model);
-          ajax.send(resultProcessor);
+          ajax
+            .send()
+            .then(
+              () => {
+                if (this.editModal) {
+                  this.$Message.success(`${this.modalTitle}成功`);
+                }
+                this.cancel();
+                this.$emit("send-success");
+              },
+              () => {}
+            )
+            .finally(() => {
+              this.submitLoading = false;
+            });
         }
       });
     }

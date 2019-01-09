@@ -14,7 +14,7 @@ const router = new VueRouter({
                 { path: "config", name: "config", component: () => import("./components/Config.vue") },
                 { path: "log", name: "log", component: () => import("./views/Log.vue") },
                 {
-                    path: 'user', name: "user", component: () => import("./views/User.vue")
+                    path: 'user', name: "user", component: () => import("./views/user/User.vue")
                 },
                 {
                     path: "user/:id/application", name: "userApplication", component: () => import("./components/UserApplication.vue")
@@ -41,13 +41,14 @@ router.beforeEach((to, from, next) => {
         return
     }
     const user = store.getters.user
+    const menus = store.getters.menus
     // console.log(user)
     if (!user || !user.id)
         next({ name: "login", replace: true })
     else if (targetMenuName == 'home')
         next()
     //根据用户的菜单权限，判断是否有权跳转到对应的页面
-    else if (!user.menus || !user.menus.some(menu => menu.name == targetMenuName)) {
+    else if (!menus || !menus.some(menu => menu.name == targetMenuName)) {
         //比较当前日期与user中的过期日期，过期了跳转到登录页
         //有问题，过期策略应当是用户无操作30分钟才过期，如果有操作就会延迟过期，而不是一个固定的过期时间
         // const expireAt = new Date(user.expireAt)

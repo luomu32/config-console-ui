@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Message } from 'iview'
 import router from '@/router.js'
+import sotre from '@/store/user.js'
 
 axios.defaults.baseURL = ''
 axios.defaults.withCredentials = true
@@ -40,6 +41,9 @@ axios.interceptors.response.use(
                 case 404:
                     Message.error("访问的资源不存在")
                     break;
+                case 415:
+                    Message.error("不支持的Content-Type")
+                    break;
                 case 500:
                     Message.error('Opps,服务器出了点小差')
                     break;
@@ -50,11 +54,13 @@ axios.interceptors.response.use(
                     Message.error({
                         content: '用户登录凭证已失效，请重新登录', onClose: function () {
                             // window.location.href = '/login'
+                            sotre.commit('clear')
                             router.push({ name: "login" })
                         }
                     })
                     break;
             }
+            return new Promise(() => { })
             // if (status === 401)
             // window.location.href = '/login'
         } else if (error.request) {
@@ -67,8 +73,8 @@ axios.interceptors.response.use(
             // console.log('Error', error.message);
         }
         // console.log(error.config);
-        return new Promise(() => { });
-        // return Promise.reject(error);
+        // return new Promise(() => { });
+        return Promise.reject(error);
     }
 )
 function has(browser) {

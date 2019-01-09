@@ -3,12 +3,7 @@
     <Sider hide-trigger :width="256" class="left-sider" :style="{overflow: 'hidden'}">
       <div class="logo-con">配置中心管理平台</div>
       <Menu theme="dark" :active-name="activeMenuName" width="auto">
-        <MenuItem
-          :name="menu.name"
-          :to="{path:menu.url,params:{menuId:'ddd'}}"
-          v-for="menu in menus"
-          :key="menu.name"
-        >
+        <MenuItem :name="menu.name" :to="menu.url" v-for="menu in menus" :key="menu.name">
           <Icon :type="menu.icon"></Icon>
           {{menu.title}}
         </MenuItem>
@@ -66,6 +61,22 @@
 .table-action .ivu-table-cell {
   padding: 0px;
 }
+.drawer {
+  height: ~"calc(100% - 55px)";
+  overflow: "auto";
+  padding-bottom: "53px";
+  position: "static";
+}
+.drawer-footer {
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  border-top: 1px solid #e8e8e8;
+  padding: 10px 16px;
+  text-align: right;
+  background: #fff;
+}
 </style>
 <script>
 import { mapGetters } from "vuex";
@@ -77,10 +88,9 @@ export default {
     } else {
       this.activeMenuName = name;
     }
-    // console.log(this.actions);
   },
   computed: {
-    ...mapGetters(["user", "actions", "menus"])
+    ...mapGetters(["user", "menus"])
   },
   data() {
     return {
