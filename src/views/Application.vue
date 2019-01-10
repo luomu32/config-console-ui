@@ -26,7 +26,7 @@
     </Row>
 
     <ModalForm
-      v-model="modalDisplayFlag"
+      ref="application"
       title="添加应用"
       :model="application"
       :rules="applicationRules"
@@ -69,7 +69,7 @@ export default {
     return {
       applicationLoading: false,
       applications: [],
-      modalDisplayFlag: false,
+      // modalDisplayFlag: false,
       application: {
         name: "",
         profile: ""
@@ -89,10 +89,11 @@ export default {
       });
     },
     openAddApplicationModal() {
-      this.modalDisplayFlag = true;
+      // this.modalDisplayFlag = true;
+      this.$refs.application.show();
     },
     closAddApplicationModal() {
-      this.modalDisplayFlag = false;
+    this.modalDisplayFlag = false;
     },
     profileFilter: function(value, option) {
       return option.toUpperCase().indexOf(value.toUpperCase()) !== -1;
@@ -122,12 +123,13 @@ export default {
     // },
     remove(applicationName) {
       if (applicationName) {
-        this.$ajax.delete(`/server/application/${applicationName}`).send({
-          success: () => {
+        this.$ajax
+          .delete(`/server/application/${applicationName}`)
+          .send()
+          .then(() => {
             this.$Message.success("删除应用成功");
             this.laodApplication();
-          }
-        });
+          });
       }
     }
   }

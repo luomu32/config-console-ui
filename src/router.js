@@ -1,7 +1,6 @@
 import vue from 'vue'
 import VueRouter from 'vue-router'
-// import Cookies from 'js-cookie'
-import store from './store/user.js'
+import store from './store/index.js'
 
 vue.use(VueRouter);
 
@@ -11,7 +10,7 @@ const router = new VueRouter({
         {
             path: "/", name: "home", component: () => import("./views/Layout.vue"), children: [
                 { path: 'server', name: 'server', component: () => import("./views/Server.vue") },
-                { path: "config", name: "config", component: () => import("./views/Config.vue") },
+                { path: "config", name: "config", component: () => import("./views/config/Config.vue") },
                 { path: "log", name: "log", component: () => import("./views/Log.vue") },
                 {
                     path: 'user', name: "user", component: () => import("./views/user/User.vue")
@@ -40,8 +39,9 @@ router.beforeEach((to, from, next) => {
         next()
         return
     }
-    const user = store.getters.user
-    const menus = store.getters.menus
+    
+    const user = store.getters['user/user']
+    const menus = store.getters['user/menus']
     // console.log(user)
     if (!user || !user.id)
         next({ name: "login", replace: true })

@@ -1,9 +1,5 @@
-import Vuex from 'vuex'
-import Vue from 'vue'
-
-Vue.use(Vuex)
-
-const User = new Vuex.Store({
+export default {
+    namespaced: true,
     state: {
         user: {
             // expireAt: "",
@@ -104,8 +100,9 @@ const User = new Vuex.Store({
             }
         }
     }, actions: {
+        login({ state, commit, rootState }) {
 
+            // commit('set')
+        }
     }
-})
-
-export default User
+}

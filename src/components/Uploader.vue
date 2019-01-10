@@ -15,7 +15,7 @@
     >
       <slot></slot>
     </Upload>
-    <Progress :percent="percent" v-show="progressRateDisplay"/>
+    <Progress :percent="percent" hide-info v-show="progressRateDisplay"/>
   </div>
 </template>
 <script>
@@ -28,7 +28,19 @@ export default {
     },
     extension: Array,
     styles: String,
-    trigger: Boolean
+    trigger: Boolean,
+    showUploadSuccessMessage: {
+      type: Boolean,
+      default: false
+    },
+    showUploadFailedMessage: {
+      type: Boolean,
+      default: true
+    }
+    // cancel: {
+    //   type: Boolean,
+    //   default: false
+    // }
   },
   data() {
     return {
@@ -50,6 +62,10 @@ export default {
   },
   methods: {
     beforeUpload() {
+      // if (this.cancel) {
+      //   console.log(this.cancel);
+      //   return false;
+      // }
       this.$Loading.start();
       this.uploaderDisplayFlag = false;
       this.progressRateDisplay = true;
@@ -57,6 +73,8 @@ export default {
     updateFormatError() {
       this.$Message.error(`仅支持[${this.extension.join(",")}]`);
       this.$Loading.finish();
+      this.progressRateDisplay = false;
+      this.uploaderDisplayFlag = true;
     },
     uploadProcess: function(event, file) {
       this.$Loading.update(event.percent);
@@ -64,12 +82,15 @@ export default {
     },
     uploadSuccess: function(response, file) {
       this.$Loading.finish();
-      this.$Message.success(`文件：${file.name}上传成功`);
+      if (this.showUploadSuccessMessage)
+        this.$Message.success(`文件：${file.name}上传成功`);
       this.uploaderDisplayFlag = false;
       this.progressRateDisplay = true;
+      this.$emit("success", response);
     },
     uploadError: function(error, file, filelist) {
-      this.$Message.error(`文件：${filelist.name}上传失败`);
+      if (this.showUploadFailedMessage)
+        this.$Message.error(`文件：${filelist.name}上传失败`);
       this.$Loading.finish();
       this.uploaderDisplayFlag = true;
       this.progressRateDisplay = false;

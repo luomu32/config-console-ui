@@ -37,7 +37,7 @@
     </TablePage>
 
     <Maintain :userForEdit="user" ref="userMaintain" @send-success="loadUsers"></Maintain>
-    
+
     <ResetPassword :userId="currentUserId.toString()" ref="restPwd"></ResetPassword>
 
     <Drawer title="应用程序权限管理" :closable="true" v-model="showApplicationManagerFlag" width="520">
@@ -53,7 +53,6 @@
   </div>
 </template>
 <script>
-import ModalForm from "../../components/ModalForm.vue";
 import OperatorButton from "../../components/OperatorButton.vue";
 import OperatorDeleteButton from "../../components/OperatorDeleteButton.vue";
 import TablePage from "../../components/TablePage.vue";
@@ -62,7 +61,6 @@ import ResetPassword from "./ResetPassword.vue";
 
 export default {
   components: {
-    ModalForm: ModalForm,
     OperatorButton: OperatorButton,
     OperatorDeleteButton: OperatorDeleteButton,
     TablePage: TablePage,
@@ -119,7 +117,6 @@ export default {
     loadUsers(page = 1, size = this.pageSize) {
       this.loading = true;
       this.$ajax
-        .get("/user")
         .param({
           page: page - 1,
           size: size,
@@ -127,7 +124,7 @@ export default {
           roleId:
             this.queryCondition.roleId == "-1" ? "" : this.queryCondition.roleId
         })
-        .send()
+        .get("/user")
         .then(({ data }) => {
           this.users = data.content;
           this.usersTotal = data.totalElements;
@@ -141,10 +138,10 @@ export default {
       this.loadUsers(pageNo, pageSize);
     },
     loadRoles() {
-      this.$http.get("/role").then(resp => {
+      this.$ajax.get("/role").then(({ data }) => {
         let roles = [];
         roles.push({ id: "-1", name: "所有" });
-        roles = roles.concat(resp.data);
+        roles = roles.concat(data);
         this.roles = roles;
       });
     },
@@ -163,7 +160,7 @@ export default {
     },
     remove: function(id) {
       if (id) {
-        this.$http.delete(`/user/${id}`).then(() => {
+        this.$ajax.delete(`/user/${id}`).then(() => {
           this.loadUsers();
         });
       }
@@ -177,8 +174,8 @@ export default {
       this.applicationLoading = true;
       this.showApplicationManagerFlag = true;
       Promise.all([
-        this.$ajax.get("/server/application").send(),
-        this.$ajax.get(`/user/${userId}/application`).send()
+        this.$ajax.get("/server/application"),
+        this.$ajax.get(`/user/${userId}/application`)
       ])
         .then(
           ([{ data: allApplications }, { data: managedApplications }]) => {
@@ -198,15 +195,14 @@ export default {
     },
     transfToManaged: function(newTargetKeys, direction, moveKeys) {
       if (direction === "right") {
-        this.$http
-          .postForm(`/user/${this.currentUserId}/application`, {
-            applications: moveKeys
-          })
+        this.$ajax
+          .form({ applications: moveKeys })
+          .post(`/user/${this.currentUserId}/application`)
           .then(() => {
             this.managerdApplications = newTargetKeys;
           });
       } else {
-        this.$http
+        this.$ajax
           .delete(
             `/user/${this.currentUserId}/application?applications=${moveKeys}`
           )

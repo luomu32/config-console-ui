@@ -60,24 +60,25 @@ export default {
           this.submitLoading = true;
 
           let ajax;
+          //filter model
+          //if not display or disable not send to server
+          if (this.paramsType === "form") ajax = this.$ajax.form(this.model);
+          else ajax = this.$ajax.body(this.model);
+
+          let result;
           if (this.editModal) {
             if (!this.edit) {
-              ajax = this.$ajax.post(this.url);
+              result = ajax.post(this.url);
             } else {
-              ajax = this.$ajax.put(`${this.url}/${this.modelId}`);
+              result = ajax.put(`${this.url}/${this.modelId}`);
             }
           } else {
             if (this.httpMethod == "post") {
-              ajax = this.$ajax.post(this.url);
-            } else ajax = this.$ajax.put(this.url);
+              result = ajax.post(this.url);
+            } else result = ajax.put(this.url);
           }
 
-          //filter model
-          //if not display or disable not send to server
-          if (this.paramsType === "form") ajax.form(this.model);
-          else ajax.body(this.model);
-          ajax
-            .send()
+          result
             .then(
               () => {
                 if (this.editModal) {

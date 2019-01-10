@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Message } from 'iview'
 import router from '@/router.js'
-import sotre from '@/store/user.js'
+import sotre from '@/store/index.js'
 
 axios.defaults.baseURL = ''
 axios.defaults.withCredentials = true
@@ -54,13 +54,13 @@ axios.interceptors.response.use(
                     Message.error({
                         content: '用户登录凭证已失效，请重新登录', onClose: function () {
                             // window.location.href = '/login'
-                            sotre.commit('clear')
+                            sotre.commit('user/clear')
                             router.push({ name: "login" })
                         }
                     })
                     break;
             }
-            return new Promise(() => { })
+            // return new Promise(() => { })
             // if (status === 401)
             // window.location.href = '/login'
         } else if (error.request) {
@@ -123,7 +123,7 @@ function _getDownloadUrl(data) {
         return 'data:attachment,' + encodeURIComponent(data);
     }
 }
-class Http {
+class HttpBuilder {
     static filterEmptyStringUrlParams(params) {
         if (!params)
             return {}
@@ -140,25 +140,47 @@ class Http {
             return newParams
         }
     }
-    static put(url) {
-        return new Http({ url: url, method: 'put' })
+    static header(headers) {
+        // this.options.headers = headers
+        return new Http({ headers: headers })
+    }
+    static form(params) {
+        if (params) {
+            var p = new URLSearchParams();
+            for (const key in params) {
+                p.append(key, params[key]);
+            }
+            // this.options.form = p
+            return new Http({ form: p })
+        }
+        return new Http({})
+    }
+    static param(params) {
+        let p = HttpBuilder.filterEmptyStringUrlParams(params)
+        // this.options.urlParams = p
+        return new Http({ urlParams: p })
+    }
+    static body(params) {
+        // this.options.body = params
+        return new Http({ body: params })
     }
     static get(url) {
-        return new Http({ url: url, method: "get" })
-    }
-    static post(url) {
-        return new Http({ url: url, method: 'post' })
+        return new Http({ url: url, method: 'get' }).send()
     }
     static delete(url) {
-        return new Http({ url: url, method: 'delete' })
+        return new Http({ url: url, method: 'delete' }).send()
     }
+    static post(url) {
+        return new Http({ url: url, method: 'post' }).send()
+    }
+    static put(url) {
+        return new Http({ url: url, method: 'put' }).send()
+    }
+}
+class Http {
     constructor(options) {
         this.options = options
         this.options.responseType = 'json'
-    }
-    header(headers) {
-        this.options.headers = headers
-        return this
     }
     form(params) {
         if (params) {
@@ -170,37 +192,57 @@ class Http {
         }
         return this
     }
-    param(params) {
-        let p = Http.filterEmptyStringUrlParams(params)
-        this.options.urlParams = p
-        return this
-    }
     body(params) {
         this.options.body = params
         return this
     }
-    // send(resultProcessor) {
-    //     axios({
-    //         method: this.options.method,
-    //         url: this.options.url,
-    //         params: this.options.urlParams,
-    //         responseType: this.options.responseType,
-    //         data: this.options.form ? this.options.form : this.options.body
-    //     }).then((resp) => {
-    //         if ((resp.status === 200 && !resp.data.message) || resp.status === 204)
-    //             resultProcessor.success(resp)
-    //         else {
-    //             if (resp.data.message)
-    //                 Message.error(resp.data.message)
-    //             resultProcessor.failed(resp)
-    //         }
-    //         if (resultProcessor && resultProcessor.finally)
-    //             resultProcessor.finally()
-    //     }).catch(() => {
-    //         if (resultProcessor && resultProcessor.finally)
-    //             resultProcessor.finally()
-    //     })
-    // }
+    put(url) {
+        this.options.url = url
+        this.options.method = 'put'
+        return this.send()
+    }
+    get(url) {
+        this.options.url = url
+        this.options.method = 'get'
+        return this.send()
+    }
+    post(url) {
+        this.options.url = url
+        this.options.method = 'post'
+        return this.send()
+    }
+    delete(url) {
+        this.options.url = url
+        this.options.method = 'delete'
+        return this.send()
+    }
+    download(url, filename, httpMethod = 'post') {
+        if (httpMethod === 'get' || httpMethod === 'delete')
+            return
+        this.options.method = httpMethod
+        this.options.url = url
+        this.options.responseType = 'blob'
+        this.send().then((resp) => {
+            if (has('ie') && has('ie') < 10) {
+                const oWin = window.top.open('about:blank', '_blank');
+                oWin.document.charset = 'utf-8';
+                oWin.document.write(resp.data);
+                oWin.document.close();
+                oWin.document.execCommand('SaveAs', filename);
+                oWin.close();
+            } else if (has('ie') === 10 || _isIE11() || _isEdge()) {
+                const csvData = new Blob([resp.data]);
+                navigator.msSaveBlob(csvData, filename);
+            } else {
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = _getDownloadUrl(resp.data);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }).catch(() => { })
+    }
     send() {
         // $ajax.get('').success(()=>{}).failed(()=>{}).finally(()=>{})
         //1.如果成功，success内的回调会被调用，finally内的回调也会被调用
@@ -224,88 +266,6 @@ class Http {
                 reject()
             })
         })
-    }
-    download(filename) {
-        if (this.options.method === 'get' || this.options.method === 'delete')
-            return
-        this.options.responseType = 'blob'
-        // let resultProcessor = new HttpResult((resp) => {
-        //     if (has('ie') && has('ie') < 10) {
-        //         const oWin = window.top.open('about:blank', '_blank');
-        //         oWin.document.charset = 'utf-8';
-        //         oWin.document.write(resp.data);
-        //         oWin.document.close();
-        //         oWin.document.execCommand('SaveAs', filename);
-        //         oWin.close();
-        //     } else if (has('ie') === 10 || _isIE11() || _isEdge()) {
-        //         const csvData = new Blob([resp.data]);
-        //         navigator.msSaveBlob(csvData, filename);
-        //     } else {
-        //         const link = document.createElement('a');
-        //         link.download = filename;
-        //         link.href = _getDownloadUrl(resp.data);
-        //         document.body.appendChild(link);
-        //         link.click();
-        //         document.body.removeChild(link);
-        //     }
-        // })
-        this.send().then((resp) => {
-            if (has('ie') && has('ie') < 10) {
-                const oWin = window.top.open('about:blank', '_blank');
-                oWin.document.charset = 'utf-8';
-                oWin.document.write(resp.data);
-                oWin.document.close();
-                oWin.document.execCommand('SaveAs', filename);
-                oWin.close();
-            } else if (has('ie') === 10 || _isIE11() || _isEdge()) {
-                const csvData = new Blob([resp.data]);
-                navigator.msSaveBlob(csvData, filename);
-            } else {
-                const link = document.createElement('a');
-                link.download = filename;
-                link.href = _getDownloadUrl(resp.data);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
-        }).catch(() => { })
-    }
-}
-class HttpResult {
-
-    constructor(promise) {
-        // this.promise = promise
-        // promise.then((resp) => {
-        //     if (this.successCallback) {
-        //         this.successCallback(resp)
-        //     }
-        // }).catch(() => {
-
-        // })
-    }
-    success(callback) {
-        // if (callback &&
-        //     (
-        //         this.respoonse.status === 204
-        //         || (this.respoonse.status === 200 && !this.respoonse.data.message)
-        //     )
-        // )
-        //     callback(this.response)
-        this.successCallback = callback
-        return this;
-    }
-    failed(callback) {
-        if (callback &&
-            ((this.response.status != 200 && this.respoonse.status != 204)
-                || (this.respoonse.status === 200 && this.response.data.message))
-        )
-            callback(this.response)
-        return this;
-    }
-    finally(callback) {
-        if (callback)
-            callback()
-        return this;
     }
 }
 //axios config
@@ -404,24 +364,6 @@ class HttpRequest {
             })
         })
     }
-    // deleteForm(url, data, resourceName = '') {
-    //     var params = new URLSearchParams();
-    //     for (const key in data) {
-    //         params.append(key, data[key]);
-    //     }
-    //     return new Promise((resolve, reject) => {
-    //         axios.delete(url, params).then(response => {
-    //             if (response.status == 204 || (response.status === 200 && !response.data)) {
-    //                 Message.success(`删除${resourceName}成功`)
-    //                 resolve()
-    //             }
-    //             else {
-    //                 Message.error({ content: `删除${resourceName}失败，${response.data.message}`, duration: 3 })
-    //                 reject()
-    //             }
-    //         })
-    //     })
-    // }
     fullPut(url, option) {
         return axios.put(url, option)
     }
@@ -473,6 +415,6 @@ class HttpRequest {
 export default {
     install(Vue) {
         Vue.prototype.$http = new HttpRequest()
-        Vue.prototype.$ajax = Http
+        Vue.prototype.$ajax = HttpBuilder
     }
 }

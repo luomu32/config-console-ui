@@ -98,16 +98,13 @@ export default {
         this.user.roleId = this.userForEdit.roleId;
       } else this.isEdit = false;
 
-      this.$ajax
-        .get("/role")
-        .send()
-        .then(
-          ({ data }) => {
-            this.roles = data;
-            this.$refs.user.show();
-          },
-          () => {}
-        );
+      this.$ajax.get("/role").then(
+        ({ data }) => {
+          this.roles = data;
+          this.$refs.user.show();
+        },
+        () => {}
+      );
     },
 
     handleSendSuccess() {

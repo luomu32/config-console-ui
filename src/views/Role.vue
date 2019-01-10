@@ -33,7 +33,6 @@
       :editModal="true"
       :modelId="roleId"
       url="/role"
-      paramsType="body"
       @send-success="loadRoles"
     >
       <FormItem label="名称" prop="name">
@@ -62,7 +61,6 @@ export default {
     return {
       roles: [],
       rolesLoading: false,
-      // modalDisplayFlag: false,
       editMode: false,
       role: {
         name: ""
@@ -89,9 +87,8 @@ export default {
     loadRoles: function(name) {
       this.rolesLoading = true;
       this.$ajax
-        .get("/role")
         .param({ name: name })
-        .send()
+        .get("/role")
         .then(resp => {
           this.roles = resp.data;
         })
@@ -105,24 +102,16 @@ export default {
         this.roleId = roleId.toString();
       }
       this.editMode = editMode;
-      // this.modalDisplayFlag = true;
       this.$refs.role.show();
-      // }
     },
-    // closRoleModal() {
-    //   this.modalDisplayFlag = false;
-    // },
     remove(id) {
       if (id) {
-        this.$ajax
-          .delete(`/role/${id}`)
-          .send()
-          .then(
-            () => {
-              this.loadRoles();
-            },
-            () => {}
-          );
+        this.$ajax.delete(`/role/${id}`).then(
+          () => {
+            this.loadRoles();
+          },
+          () => {}
+        );
       }
     },
     showPermissionManage(id) {
@@ -131,8 +120,8 @@ export default {
         this.permissionsLoading = true;
         this.$refs.permission.show();
         Promise.all([
-          this.$ajax.get("/permissions").send(),
-          this.$ajax.get(`/role/${id}/permissions`).send()
+          this.$ajax.get("/permissions"),
+          this.$ajax.get(`/role/${id}/permissions`)
         ])
           .then(([{ data: allPermissions }, { data: rolePermissions }]) => {
             const permissionTree = new Array();
@@ -146,9 +135,7 @@ export default {
                   id: menu.id,
                   expand: true,
                   action: false,
-                  checked: rolePermissions.menus.some(
-                    m => m.id == menu.id
-                  ),
+                  checked: rolePermissions.menus.some(m => m.id == menu.id),
                   children: allPermissions.actions
                     .filter(action => action.menuId == menu.id)
                     .map(action => {
@@ -181,14 +168,13 @@ export default {
         else menus.push(element.id);
       });
       this.$ajax
-        .put(`/role/${this.roleId}/grant-permission`)
         .form({ menus: menus, actions: actions })
-        .send()
+        .put(`/role/${this.roleId}/grant-permission`)
         .then(
           resp => {
             this.$Message.success("设置权限成功");
-            this.$refs.permission.close()
-            this.$store.commit("updatePermission", resp.data);
+            this.$refs.permission.close();
+            this.$store.commit("user/updatePermission", resp.data);
           },
           () => {}
         )

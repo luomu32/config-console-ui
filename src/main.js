@@ -4,16 +4,18 @@ import router from './router.js'
 import 'iview/dist/styles/iview.css'
 import iView from 'iview';
 // import animated from 'animate.css'
-import Http from '@/http.js'
-import store from './store/user.js'
-import directive from './directives/directive.js'
+import http from '@/http.js'
+import store from './store/index.js'
+import directive from './directive/index.js'
+import lang from './lang.js'
 // import { Layout, Sider, Content, Menu, MenuItem, Table } from "iview";
 
 
 Vue.config.productionTip = false
 
 Vue.use(iView);
-Vue.use(Http)
+Vue.use(http)
+Vue.use(directive)
 // Vue.use(animated)
 
 new Vue({

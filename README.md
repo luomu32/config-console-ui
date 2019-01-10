@@ -32,3 +32,7 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
  - [x] Model对话框的ok方法无法阻塞对话框的关闭。需要添加loading。
  - [ ] 表单中无法自定义错误信息的展示位置 
  - [ ] Iview的按需引用
+ - [ ] i18n
+ - [ ] 二级菜单
+ - [ ] ldap
+ - [ ] 密钥配置

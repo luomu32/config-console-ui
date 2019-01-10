@@ -63,7 +63,6 @@
 }
 </style>
 <script>
-// import Cookies from "js-cookie";
 export default {
   computed: {},
   data() {
@@ -84,12 +83,11 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.$ajax
-            .post("auth")
             .form(this.form)
-            .send()
+            .post("auth")
             .then(
-              resp => {
-                this.$store.commit("set", resp.data);
+              ({ data }) => {
+                this.$store.commit("user/set", data);
                 this.$router.replace({ name: "home" });
               },
               () => {}

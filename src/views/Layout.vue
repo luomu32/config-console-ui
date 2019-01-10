@@ -90,7 +90,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(["user", "menus"])
+    ...mapGetters("user", ["user", "menus"])
   },
   data() {
     return {
@@ -98,17 +98,14 @@ export default {
     };
   },
   methods: {
-    loginOut: function() {
-      this.$ajax
-        .post("/sing-out")
-        .send()
-        .then(
-          resp => {
-            this.$store.commit("clear");
-            this.$router.replace({ name: "login" });
-          },
-          () => {}
-        );
+    loginOut() {
+      this.$ajax.post("/sing-out").then(
+        () => {
+          this.$store.commit("user/clear");
+          this.$router.replace({ name: "login" });
+        },
+        () => {}
+      );
     }
   }
 };
