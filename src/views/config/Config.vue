@@ -3,24 +3,29 @@
     <div class="query-bar">
       <Row>
         <Col span="12">
-          <label>应用：</label>
+          <label>{{$t('application')}}：</label>
           <Select v-model="application" style="width:160px">
             <Option v-for="item in applications" :value="item" :key="item">{{ item }}</Option>
           </Select>
+          <label>{{$t('profile')}}：</label>
           <Select v-model="profile" style="width:160px">
             <Option v-for="item in profiles" :value="item" :key="item">{{ item }}</Option>
           </Select>
-          <Button @click="loadConfigs()" icon="md-search">查询</Button>
+          <Button @click="loadConfigs()" icon="md-search">{{$t('query')}}</Button>
         </Col>
         <Col span="12" style="text-align:right">
           <ButtonGroup>
-            <Button icon="md-add" v-authority="'add'" @click="showModal()">创建配置</Button>
-            <Button icon="md-arrow-up" v-authority="'import'" @click="showImportModal()">导入配置</Button>
+            <Button icon="md-add" v-authority="'add'" @click="showModal()">{{$t('createConfig')}}</Button>
+            <Button
+              icon="md-arrow-up"
+              v-authority="'import'"
+              @click="showImportModal()"
+            >{{$t('importConfig')}}</Button>
             <Dropdown style="text-align:left" v-authority="'export'" @on-click="exportConfig">
-              <Button icon="md-download">导出配置</Button>
+              <Button icon="md-download">{{$t('exportConfig')}}</Button>
               <DropdownMenu slot="list">
-                <DropdownItem name="properties">Property格式</DropdownItem>
-                <DropdownItem name="yml">YAML格式</DropdownItem>
+                <DropdownItem name="properties">{{$t('property')}}</DropdownItem>
+                <DropdownItem name="yml">{{$t('yml')}}</DropdownItem>
               </DropdownMenu>
             </Dropdown>
           </ButtonGroup>
@@ -30,8 +35,8 @@
 
     <Table border :data="configs" :columns="col" :loading="configsLoading">
       <template slot-scope="{ row }" slot="action">
-        <OperatorButton v-authority="'edit'" @click="showModal(row)">编辑</OperatorButton>
-        <OperatorDeleteButton @on-ok="remove(row.key)" v-authority="'del'">删除</OperatorDeleteButton>
+        <OperatorButton v-authority="'edit'" @click="showModal(row)">{{$t('edit')}}</OperatorButton>
+        <OperatorDeleteButton @on-ok="remove(row.key)" v-authority="'del'">{{$t('delete')}}</OperatorDeleteButton>
       </template>
     </Table>
 
@@ -71,10 +76,10 @@ export default {
       // noProfile: false,
       col: [
         { type: "selection", width: 60, align: "center" },
-        { title: "配置项名称", key: "key" },
-        { title: "配置项值", key: "value" },
+        { title: this.$t("configName"), key: "key" },
+        { title: this.$t("configValue"), key: "value" },
         {
-          title: "操作",
+          title: this.$t("action"),
           align: "center",
           width: 200,
           slot: "action"
@@ -127,7 +132,6 @@ export default {
     },
     showModal(row) {
       if (row) {
-        console.log(row);
         this.configForEdit.application = this.application;
         this.configForEdit.profile = this.profile;
         this.configForEdit.name = row.key;
@@ -154,7 +158,7 @@ export default {
     },
     exportConfig(name) {
       if (!this.application || (this.profiles.length != 0 && !this.profile)) {
-        this.$Message.error("请先指定一个应用及Profile");
+        this.$Message.error(this.$t("applicationAndProfileNotNull"));
         return;
       }
       this.$ajax

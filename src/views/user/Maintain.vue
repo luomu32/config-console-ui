@@ -1,6 +1,6 @@
 <template>
   <ModalForm
-    title="用户"
+    :title="$t('user.title')"
     ref="user"
     :model="user"
     :modelId="user.id"
@@ -17,7 +17,7 @@
         </FormItem>
       </Col>
       <Col span="12">
-        <FormItem label="所属角色" prop="roleId">
+        <FormItem :label="$t('user.from.role')" prop="roleId">
           <Select v-model="user.roleId">
             <Option v-for="item in roles" :value="item.id" :key="item.id">{{ item.name }}</Option>
           </Select>
@@ -26,12 +26,12 @@
     </Row>
     <Row :gutter="16">
       <Col span="12">
-        <FormItem label="密码" prop="password" v-if="!isEdit">
+        <FormItem :label="$t('user.password.title')" prop="password" v-if="!isEdit">
           <Input v-model="user.password" clearable type="password"/>
         </FormItem>
       </Col>
       <Col span="12">
-        <FormItem label="确认密码" prop="confirmPassword" v-if="!isEdit">
+        <FormItem :label="$t('user.confirm_password.title')" prop="confirmPassword" v-if="!isEdit">
           <Input v-model="user.confirmPassword" ignoreSubmit clearable type="password"/>
         </FormItem>
       </Col>

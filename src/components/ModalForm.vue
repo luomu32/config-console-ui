@@ -4,8 +4,14 @@
       <slot></slot>
     </Form>
     <div slot="footer" class="footer">
-      <Button type="error" class="btn" ghost @click="cancel">取消</Button>
-      <Button type="success" class="btn" ghost @click="submit" :loading="submitLoading">提交</Button>
+      <Button type="error" class="btn" ghost @click="cancel">{{$t('cancel')}}</Button>
+      <Button
+        type="success"
+        class="btn"
+        ghost
+        @click="submit"
+        :loading="submitLoading"
+      >{{$t('submit')}}</Button>
     </div>
   </Modal>
 </template>
@@ -34,8 +40,8 @@ export default {
       if (!this.editModal) {
         return this.title;
       } else {
-        if (this.edit) return `编辑${this.title}`;
-        else return `新增${this.title}`;
+        if (this.edit) return `${this.$t("edit")}${this.title}`;
+        else return `${this.$t("new")}${this.title}`;
       }
     }
   },
@@ -82,7 +88,9 @@ export default {
             .then(
               () => {
                 if (this.editModal) {
-                  this.$Message.success(`${this.modalTitle}成功`);
+                  this.$Message.success(
+                    `${this.modalTitle}${this.$t("success")}`
+                  );
                 }
                 this.cancel();
                 this.$emit("send-success");

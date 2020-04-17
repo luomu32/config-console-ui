@@ -5,21 +5,25 @@
         <div class="form-con">
           <Form ref="loginForm" :model="form" :rules="rules" @keydown.enter.native="handleSubmit">
             <FormItem prop="name">
-              <Input v-model="form.name" placeholder="请输入用户名">
+              <Input v-model="form.name" :placeholder="$t('login.username.placeholder')">
                 <span slot="prepend">
                   <Icon :size="16" type="ios-person"></Icon>
                 </span>
               </Input>
             </FormItem>
             <FormItem prop="password">
-              <Input type="password" v-model="form.password" placeholder="请输入密码">
+              <Input
+                type="password"
+                v-model="form.password"
+                :placeholder="$t('login.password.placeholder')"
+              >
                 <span slot="prepend">
                   <Icon :size="14" type="md-lock"></Icon>
                 </span>
               </Input>
             </FormItem>
             <FormItem>
-              <Button @click="handleSubmit" type="primary" long>登录</Button>
+              <Button @click="handleSubmit" type="primary" long>{{$t('login.submit')}}</Button>
             </FormItem>
           </Form>
         </div>
@@ -72,10 +76,9 @@ export default {
         password: ""
       },
       rules: {
-        name: [{ required: true, message: "用户名不能为空" }],
-        password: [{ required: true, message: "密码不能为空" }]
+        name: [{ required: true, message: this.$t("login.username.empty") }],
+        password: [{ required: true, message: this.$t("login.password.empty") }]
       }
-      //   loginBtnFlag: false
     };
   },
   methods: {

@@ -20,8 +20,14 @@ const router = new VueRouter({
                 }
                 , {
                     path: "role", name: "role", component: () => import("./views/Role.vue")
+                }, 
+                // {
+                //     path: "application", name: "application", component: () => import("./views/application/Application.vue")
+                // }, 
+                {
+                    path: "application/create", name: "application-add", component: () => import("./views/application/Create.vue")
                 }, {
-                    path: "application", name: "application", component: () => import("./views/Application.vue")
+                    path: "application/manage", name: "application-query", component: () => import("./views/application/Manage.vue")
                 }
             ]
         },
@@ -39,7 +45,7 @@ router.beforeEach((to, from, next) => {
         next()
         return
     }
-    
+
     const user = store.getters['user/user']
     const menus = store.getters['user/menus']
     // console.log(user)
@@ -48,7 +54,7 @@ router.beforeEach((to, from, next) => {
     else if (targetMenuName == 'home')
         next()
     //根据用户的菜单权限，判断是否有权跳转到对应的页面
-    else if (!menus || !menus.some(menu => menu.name == targetMenuName)) {
+    else if (!menus || !menuPermissionCheck(menus, targetMenuName)) {
         //比较当前日期与user中的过期日期，过期了跳转到登录页
         //有问题，过期策略应当是用户无操作30分钟才过期，如果有操作就会延迟过期，而不是一个固定的过期时间
         // const expireAt = new Date(user.expireAt)
@@ -66,5 +72,22 @@ router.beforeEach((to, from, next) => {
     } else
         next()
 })
+
+const menuPermissionCheck = (menus, targetMenuName) => {
+    const result = menus.some(element => {
+        if (element.children.length != 0)
+            return menuPermissionCheck(element.children, targetMenuName)
+
+        // console.log(`${element.name}=${targetMenuName}`)
+        if (element.name == targetMenuName) {
+            // console.log(`${element.name}`)
+            return true
+        }
+    });
+    if (result) {
+        return true
+    }
+    return false
+}
 
 export default router

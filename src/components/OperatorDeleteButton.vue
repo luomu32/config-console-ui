@@ -1,5 +1,12 @@
 <template>
-  <Poptip :confirm="true" :title="title" :transfer="true" @on-ok="handleOk">
+  <Poptip
+    :confirm="true"
+    :title="title"
+    :transfer="true"
+    :ok-text="$t('ok')"
+    :cancel-text="$t('cancel')"
+    @on-ok="handleOk"
+  >
     <OperatorButton :type="type">
       <slot></slot>
     </OperatorButton>
@@ -14,7 +21,9 @@ export default {
   props: {
     title: {
       type: String,
-      default: "确定要删除吗？"
+      default() {
+        return this.$t("confirmTitle");
+      }
     },
     type: {
       type: String,

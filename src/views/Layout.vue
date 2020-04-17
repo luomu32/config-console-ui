@@ -1,20 +1,51 @@
 <template>
   <Layout style="height: 100%" class="main">
     <Sider hide-trigger :width="256" class="left-sider" :style="{overflow: 'hidden'}">
-      <div class="logo-con">配置中心管理平台</div>
-      <Menu theme="dark" :active-name="activeMenuName" width="auto">
-        <MenuItem :name="menu.name" :to="menu.url" v-for="menu in menus" :key="menu.name">
-          <Icon :type="menu.icon"></Icon>
-          {{menu.title}}
-        </MenuItem>
+      <Menu theme="dark" :active-name="activeMenuName" width="auto" :open-names="openMenus">
+        <template v-for="menu in menus">
+          <MenuItem
+            :name="menu.name"
+            :to="menu.url"
+            :key="menu.name"
+            v-if="menu.children.length==0"
+          >
+            <Icon :type="menu.icon" v-if="menu.icon"></Icon>
+            {{menu.title}}
+          </MenuItem>
+          <Submenu :name="menu.name" v-else :key="menu.name">
+            <template slot="title" v-if="menu.icon">
+              <Icon :type="menu.icon"/>
+              {{menu.title}}
+            </template>
+            <MenuItem
+              :name="subMenu.name"
+              v-for="subMenu in menu.children"
+              :key="subMenu.name"
+              :to="subMenu.url"
+            >
+              <Icon :type="subMenu.icon" v-if="subMenu.icon"></Icon>
+              {{subMenu.title}}
+            </MenuItem>
+          </Submenu>
+        </template>
       </Menu>
     </Sider>
     <Layout>
       <Header class="header-con">
-        {{user.username}}
-        <Tag>{{user.roleName}}</Tag>
-        <Button>修改密码</Button>
-        <Button @click="loginOut" icon="md-log-out">退出</Button>
+        <Row :gutter="16">
+          <Col span="16">
+            <div class="logo-con">{{$t('title')}}</div>
+          </Col>
+          <Col span="8">
+            <div class="user">
+              {{user.username}}
+              <Tag>{{user.roleName}}</Tag>
+              <Button @click="$refs.changePassword.show()">{{$t('changePassword')}}</Button>
+              <ChangePassword ref="changePassword" :userId="user.id.toString()"></ChangePassword>
+              <Button @click="loginOut" icon="md-log-out">{{$t('quit')}}</Button>
+            </div>
+          </Col>
+        </Row>
       </Header>
       <Content class="content-wrapper">
         <router-view/>
@@ -22,13 +53,53 @@
     </Layout>
   </Layout>
 </template>
+<script>
+import { mapGetters } from "vuex";
+import ChangePassword from "./user/ChangePassword.vue";
+
+export default {
+  components: {
+    ChangePassword: ChangePassword
+  },
+  mounted() {
+    const name = this.$route.name;
+    if (name === "home") {
+      this.activeMenuName = "";
+    } else {
+      this.activeMenuName = name;
+    }
+  },
+  computed: {
+    ...mapGetters("user", ["user", "menus"]),
+    openMenus() {
+      return this.menus.filter(m => m.children.length != 0).map(m => m.name);
+    }
+  },
+  data() {
+    return {
+      activeMenuName: ""
+    };
+  },
+  methods: {
+    loginOut() {
+      this.$ajax.post("/sing-out").then(
+        () => {
+          this.$store.commit("user/clear");
+          this.$router.replace({ name: "login" });
+        },
+        () => {}
+      );
+    }
+  }
+};
+</script>
 <style lang="less">
 .logo-con {
-  height: 64px;
+  // height: 64px;
   padding: 0px;
-  text-align: center;
-  color: #fff;
-  line-height: 64px;
+  // text-align: center;
+  // color: #fff;
+  // line-height: 64px;
   font-size: 24px;
   font-weight: bold;
 }
@@ -36,6 +107,8 @@
   background: #fff;
   padding: 0 20px;
   width: 100%;
+}
+.header-con .user {
   text-align: right;
 }
 .content-wrapper {
@@ -78,35 +151,3 @@
   background: #fff;
 }
 </style>
-<script>
-import { mapGetters } from "vuex";
-export default {
-  mounted() {
-    const name = this.$route.name;
-    if (name === "home") {
-      this.activeMenuName = "";
-    } else {
-      this.activeMenuName = name;
-    }
-  },
-  computed: {
-    ...mapGetters("user", ["user", "menus"])
-  },
-  data() {
-    return {
-      activeMenuName: "server"
-    };
-  },
-  methods: {
-    loginOut() {
-      this.$ajax.post("/sing-out").then(
-        () => {
-          this.$store.commit("user/clear");
-          this.$router.replace({ name: "login" });
-        },
-        () => {}
-      );
-    }
-  }
-};
-</script>

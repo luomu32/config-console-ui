@@ -23,9 +23,6 @@ export default {
             }
         },
         actions: (state) => {
-            // if (!getters.user.actions)
-            //     return []
-            // return getters.user.actions
             if (state.actions)
                 return state.actions
             try {
@@ -43,10 +40,6 @@ export default {
             return getters.actions.filter(m => m.menuId == menus[0].id)
         },
         menus: (state) => {
-            // const menus = getters.user.menus
-            // if (!menus)
-            //     return []
-            // return menus
             if (state.menus)
                 return state.menus
             try {

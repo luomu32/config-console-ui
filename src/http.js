@@ -2,6 +2,7 @@ import axios from "axios";
 import { Message } from 'iview'
 import router from '@/router.js'
 import sotre from '@/store/index.js'
+import locale from "@/locale/index"
 
 axios.defaults.baseURL = ''
 axios.defaults.withCredentials = true
@@ -52,7 +53,7 @@ axios.interceptors.response.use(
                     break;
                 case 401:
                     Message.error({
-                        content: '用户登录凭证已失效，请重新登录', onClose: function () {
+                        content: locale.t('user.token_expired'), onClose: function () {
                             // window.location.href = '/login'
                             sotre.commit('user/clear')
                             router.push({ name: "login" })

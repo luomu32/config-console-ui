@@ -135,20 +135,30 @@ export default {
                   id: menu.id,
                   expand: true,
                   action: false,
-                  checked: rolePermissions.menus.some(m => m.id == menu.id),
-                  children: allPermissions.actions
-                    .filter(action => action.menuId == menu.id)
-                    .map(action => {
-                      return {
-                        title: action.name,
-                        id: action.id,
-                        expand: true,
-                        action: true,
-                        checked: rolePermissions.actions.some(
-                          a => a.id == action.id
-                        )
-                      };
-                    })
+                  // disabled: menu.children.length != 0,
+                  disableCheckbox: menu.children.length != 0,
+                  checked:
+                    menu.children.length == 0 &&
+                    rolePermissions.menus.some(m => m.id == menu.id),
+                  children: this.renderPermissionTreeChildren(
+                    menu,
+                    allPermissions.actions,
+                    rolePermissions.actions,
+                    rolePermissions.menus
+                  )
+                  // children: allPermissions.actions
+                  //   .filter(action => action.menuId == menu.id)
+                  //   .map(action => {
+                  //     return {
+                  //       title: action.name,
+                  //       id: action.id,
+                  //       expand: true,
+                  //       action: true,
+                  //       checked: rolePermissions.actions.some(
+                  //         a => a.id == action.id
+                  //       )
+                  //     };
+                  //   })
                 };
               })
             });
@@ -157,6 +167,54 @@ export default {
           .finally(() => {
             this.permissionsLoading = false;
           });
+      }
+    },
+    renderPermissionTreeChildren(menu, allActions, roleActions, roleMenus) {
+      if (menu.children.length != 0) {
+        // let actions = [];
+        let subRoleMenus = roleMenus.filter(rm => rm.id == menu.id)[0].children;
+        console.log(subRoleMenus)
+        let subMenus = [];
+        menu.children.forEach(m => {
+          let menuOrActions = this.renderPermissionTreeChildren(
+            m,
+            allActions,
+            roleActions,
+            subRoleMenus
+          );
+          //下面没有action，也没有menu，可以选
+          //下面有menu，有没有action未知，可以选，
+          //下面只有action，
+          // console.log(roleMenus);
+          subMenus.push({
+            title: m.title,
+            id: m.id,
+            action: false,
+            expand: true,
+            checked: subRoleMenus.some(rm => rm.id == m.id),
+            // disableCheckbox:
+            //   menuOrActions.length != 0 &&
+            //   !menuOrActions.some(ma => ma.action == false),
+            children: menuOrActions
+          });
+        });
+        // console.log(menu);
+        // console.log(actions);
+        return subMenus;
+      } else {
+        return allActions
+          .filter(action => action.menuId == menu.id)
+          .map(action => {
+            return {
+              title: action.name,
+              id: action.id,
+              expand: true,
+              action: true,
+              checked: roleActions.some(a => a.id == action.id)
+            };
+          });
+        // menuActions = menuActions.concat(a);
+        // console.log(menuActions);
       }
     },
     grantPermission() {

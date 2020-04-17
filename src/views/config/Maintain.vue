@@ -7,37 +7,33 @@
     :edit="isEdit"
     :editModal="true"
     :url="'/config/'+config.application"
-    title="配置"
+    :title="$t('config')"
     @send-success="$emit('send-success')"
   >
     <Row :gutter="16">
       <Col span="12">
-        <FormItem label="所属的应用" prop="application" v-if="!isEdit">
+        <FormItem :label="$t('application')" prop="application" v-if="!isEdit">
           <Select v-model="config.application" @on-change="applicationChange">
             <Option v-for="item in applications" :value="item" :key="item">{{ item }}</Option>
           </Select>
         </FormItem>
       </Col>
       <Col span="12">
-        <FormItem label="所属的Profile" prop="profile" v-if="profiles.length!=0 && !isEdit">
+        <FormItem :label="$t('profile')" prop="profile" v-if="profiles.length!=0 && !isEdit">
           <Select v-model="config.profile">
             <Option v-for="item in profiles" :value="item" :key="item">{{ item }}</Option>
           </Select>
         </FormItem>
       </Col>
     </Row>
-    <Row :gutter="16">
-      <Col span="12">
-        <FormItem label="配置项名称" prop="key">
-          <Input v-model="config.key" :clearable="!isEdit" :disabled="isEdit"/>
-        </FormItem>
-      </Col>
-      <Col span="12">
-        <FormItem label="配置项值" prop="value">
-          <Input v-model="config.value" clearable/>
-        </FormItem>
-      </Col>
-    </Row>
+
+    <FormItem :label="$t('configName')" prop="key">
+      <Input v-model="config.key" :clearable="!isEdit" :disabled="isEdit"/>
+    </FormItem>
+
+    <FormItem :label="$t('configValue')" prop="value">
+      <Input v-model="config.value" type="textarea" clearable/>
+    </FormItem>
   </ModalForm>
 </template>
 <script>
@@ -61,7 +57,9 @@ export default {
         value: ""
       },
       rules: {
-        application: [{ required: true, message: "所属应用不能为空" }],
+        application: [
+          { required: true, message: this.$t("applicationNotNull") }
+        ],
         profile: [{ required: true, message: "所属Profile不能为空" }],
         key: [{ required: true, message: "名称不能为空" }],
         value: [{ required: true, message: "值不能为空", trigger: "change" }]

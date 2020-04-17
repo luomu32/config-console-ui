@@ -7,13 +7,13 @@ import iView from 'iview';
 import http from '@/http.js'
 import store from './store/index.js'
 import directive from './directive/index.js'
-import lang from './lang.js'
+import locale from './locale/index'
 // import { Layout, Sider, Content, Menu, MenuItem, Table } from "iview";
 
 
 Vue.config.productionTip = false
 
-Vue.use(iView);
+Vue.use(iView, { i18n: (k, v) => locale.t(k, v) });
 Vue.use(http)
 Vue.use(directive)
 // Vue.use(animated)
@@ -21,5 +21,6 @@ Vue.use(directive)
 new Vue({
   render: h => h(App),
   store: store,
+  i18n: locale,
   router: router
 }).$mount('#app')

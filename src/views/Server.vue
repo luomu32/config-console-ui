@@ -1,67 +1,59 @@
 <template>
-    <div>   
+  <div>
+    <!-- <div class="header">
 
-        <!-- <div class="header">
+    </div>-->
+    <div class="container">
+      <Button @click="show(false)" icon="md-add">新增</Button>
+      <!-- <Upload action="/server/key" :show-upload-list="false"  -->
+      <!-- :format="['properties','yml']" :on-format-error="updateFormatError"  -->
+      <!-- :before-upload="beforeUpload" :on-success="uploadSuccess" -->
+      <!-- :on-error="uploadError" :on-progress="uploadProcess" -->
+      <!-- style="display:inline-block"> -->
+      <Button icon="md-key" @click="encryptionModelDisplayFlag=true">配置密钥</Button>
+      <!-- </Upload> -->
+      <Button @click="loadServer()" icon="md-refresh">手动刷新</Button>
 
-        </div> -->
-        <div class="container">
-<Button @click="show(false)" icon="md-add">
-            新增
-        </Button>
-        <!-- <Upload action="/server/key" :show-upload-list="false"  -->
-                <!-- :format="['properties','yml']" :on-format-error="updateFormatError"  -->
-                <!-- :before-upload="beforeUpload" :on-success="uploadSuccess" -->
-                <!-- :on-error="uploadError" :on-progress="uploadProcess" -->
-                <!-- style="display:inline-block"> -->
-        <Button icon="md-key" @click="encryptionModelDisplayFlag=true">
-            配置密钥
-        </Button>
-        <!-- </Upload> -->
-        <Button @click="loadServer()" icon="md-refresh">
-            手动刷新
-        </Button>
+      <Table border :columns="col" :data="servers" :loading="serverLoading"/>
 
-        <Table border :columns="col" :data="servers" :loading="serverLoading" />
-
-        <Modal v-model="showModelFlag" :title="modalTitle" @on-cancel="cancel">            
-            <Form :model="server" label-position="top" :rules="serverRules" ref="server">
-                <FormItem label="名称" prop="name">
-                    <Input v-model="server.name" clearable />
-                </FormItem>
-                <FormItem label="类型" prop="type">
-                <RadioGroup v-model="server.type" type="button">
-                    <Radio label="ZooKeeper"></Radio>
-                    <Radio label="Consul"></Radio>
-                    <Radio label="Git"></Radio>
-                    <Radio label="SVN"></Radio>
-                </RadioGroup>
-                </FormItem>
-                <FormItem label="前缀" prop="prefix">
-                    <Input v-model="server.prefix" clearable placeholder="不填默认为/根目录" />
-                </FormItem>
-                <FormItem label="地址（域名:端口或IP:端口）" prop="url">
-                    <Input v-model="server.url" clearable placeholder="比如：localhost:2180" />
-                </FormItem>
-            </Form>
-             <div slot="footer" style="text-align: center">
-                <Button type="error" style="width:200px" ghost @click="cancel">取消</Button>
-                <Button type="success" style="width:200px" ghost @click="submit">提交</Button>
-            </div>
-        </Modal>
-
-        <Modal v-model="encryptionModelDisplayFlag" :closable="false" @on-cancel="cancel">
-            <Tabs>
-                <TabPane label="加密密码">标签一的内容</TabPane>
-                <TabPane label="加密密钥">标签二的内容</TabPane>
-            </Tabs>
-            <div slot="footer" style="text-align: center">
-                <Button type="error" style="width:200px" ghost @click="cancel">取消</Button>
-                <Button type="success" style="width:200px" ghost @click="submit">提交</Button>
-            </div>
-        </Modal>
+      <Modal v-model="showModelFlag" :title="modalTitle" @on-cancel="cancel">
+        <Form :model="server" label-position="top" :rules="serverRules" ref="server">
+          <FormItem label="名称" prop="name">
+            <Input v-model="server.name" clearable/>
+          </FormItem>
+          <FormItem label="类型" prop="type">
+            <RadioGroup v-model="server.type" type="button">
+              <Radio label="ZooKeeper"></Radio>
+              <Radio label="Consul"></Radio>
+              <Radio label="Git"></Radio>
+              <Radio label="SVN"></Radio>
+            </RadioGroup>
+          </FormItem>
+          <FormItem label="前缀" prop="prefix">
+            <Input v-model="server.prefix" clearable placeholder="不填默认为/根目录"/>
+          </FormItem>
+          <FormItem label="地址（域名:端口或IP:端口）" prop="url">
+            <Input v-model="server.url" clearable placeholder="比如：localhost:2180"/>
+          </FormItem>
+        </Form>
+        <div slot="footer" style="text-align: center">
+          <Button type="error" style="width:200px" ghost @click="cancel">取消</Button>
+          <Button type="success" style="width:200px" ghost @click="submit">提交</Button>
         </div>
-        
+      </Modal>
+
+      <Modal v-model="encryptionModelDisplayFlag" :closable="false" @on-cancel="cancel">
+        <Tabs>
+          <TabPane label="加密密码">标签一的内容</TabPane>
+          <TabPane label="加密密钥">标签二的内容</TabPane>
+        </Tabs>
+        <div slot="footer" style="text-align: center">
+          <Button type="error" style="width:200px" ghost @click="cancel">取消</Button>
+          <Button type="success" style="width:200px" ghost @click="submit">提交</Button>
+        </div>
+      </Modal>
     </div>
+  </div>
 </template>
 <script>
 // import ServerConfig from "./ServerConfig.vue";
@@ -119,6 +111,7 @@ export default {
                   },
                   on: {
                     click: () => {
+                      this.server.id = params.row.id;
                       this.server.name = params.row.name;
                       this.server.prefix = params.row.prefix;
                       this.server.url = params.row.url;
@@ -137,6 +130,7 @@ export default {
                           break;
                       }
                       //   this.server.type = params.row.type;
+
                       this.show(true);
                     }
                   }
@@ -181,6 +175,7 @@ export default {
       modalTitle: "",
       editMode: false,
       server: {
+        id: "",
         name: "",
         prefix: "",
         url: "",
@@ -206,7 +201,6 @@ export default {
       });
     },
     renderConfig: function(id) {
-      console.log(id);
       this.currentServerId = id;
     },
     show(editMode) {
@@ -222,19 +216,34 @@ export default {
     submit: function() {
       this.$refs["server"].validate(valid => {
         if (valid) {
-          console.log("let go");
-          this.$http
-            .post("/server", {
-              name: this.server.name,
-              prefix: this.server.prefix,
-              url: this.server.url,
-              type: this.server.type.toUpperCase()
-            })
-            .then(resp => {
-              this.showModelFlag = false;
-              this.$refs["server"].resetFields();
-              this.loadServer();
-            });
+          if (this.editMode) {
+            this.$http
+              .putBody("/server", {
+                id: this.server.id,
+                name: this.server.name,
+                prefix: this.server.prefix,
+                url: this.server.url,
+                type: this.server.type.toUpperCase()
+              })
+              .then(resp => {
+                this.showModelFlag = false;
+                this.$refs.server.resetFields();
+                this.loadServer();
+              });
+          } else {
+            this.$http
+              .post("/server", {
+                name: this.server.name,
+                prefix: this.server.prefix,
+                url: this.server.url,
+                type: this.server.type.toUpperCase()
+              })
+              .then(resp => {
+                this.showModelFlag = false;
+                this.$refs["server"].resetFields();
+                this.loadServer();
+              });
+          }
         }
       });
     },
